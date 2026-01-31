@@ -18,7 +18,7 @@ import {
 import { useAuth } from "@/components/auth-provider";
 import { useLanguage } from "./language-toggle";
 import { translations } from "@/lib/translations";
-import { SignupRequestSchema } from "@repo/types";
+import { AuthErrorCodes, SignupRequestSchema } from "@repo/types";
 import { parseI18nMessage, ApiError } from "@/lib/api";
 
 interface AuthFormProps {
@@ -122,7 +122,12 @@ export function AuthForm({ mode }: AuthFormProps) {
         router.push("/diary");
       } catch (error) {
         const apiError = error as ApiError;
-        setError(apiError.message);
+        if (apiError.errorCode === AuthErrorCodes.EMAIL_NOT_VERIFIED) {
+          alert(t.emailVerificationRequired);
+          router.push(`/verify?email=${encodeURIComponent(email)}`);
+        } else {
+          setError(apiError.message);
+        }
       }
     }
 

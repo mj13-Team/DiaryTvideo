@@ -56,6 +56,8 @@ export const translations: { [key in Language]: { [key: string]: string } } = {
     verifyAndContinue: "Verify and continue",
     codeExpired: "Verification code has expired",
     invalidCode: "Invalid verification code",
+    emailVerificationRequired:
+      "Email verification is required. Redirecting to verification page.",
 
     // Password Reset Page
     forgotPassword: "Forgot your password?",
@@ -197,6 +199,8 @@ export const translations: { [key in Language]: { [key: string]: string } } = {
     verifyAndContinue: "인증하고 계속하기",
     codeExpired: "인증 코드가 만료되었습니다",
     invalidCode: "올바르지 않은 코드입니다",
+    emailVerificationRequired:
+      "이메일 인증이 필요합니다. 인증 페이지로 이동합니다.",
 
     // Password Reset Page
     forgotPassword: "비밀번호를 잊으셨나요?",

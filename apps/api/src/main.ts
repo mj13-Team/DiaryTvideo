@@ -1,6 +1,7 @@
 import { NestFactory } from "@nestjs/core";
 import helmet from "helmet";
 import { AppModule } from "./app.module";
+import { ErrorCodeFilter } from "./common/filters/error-code.filter";
 
 async function bootstrap() {
   const isProduction = process.env.NODE_ENV === "production";
@@ -14,6 +15,7 @@ async function bootstrap() {
     origin: process.env.FRONTEND_URL,
     credentials: true,
   });
+  app.useGlobalFilters(new ErrorCodeFilter());
   await app.listen(process.env.PORT ?? 4000);
 }
 bootstrap();

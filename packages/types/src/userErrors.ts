@@ -32,3 +32,8 @@ export const UserErrors = {
     ko: "계정 탈퇴를 위해서는 비밀번호가 필요합니다",
   }),
 } as const;
+
+export const UserErrorCodes = Object.keys(UserErrors).reduce(
+  (acc, key) => ({ ...acc, [key]: key }),
+  {} as { [K in keyof typeof UserErrors]: K },
+);

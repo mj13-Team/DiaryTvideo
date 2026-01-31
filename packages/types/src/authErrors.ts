@@ -118,3 +118,8 @@ export const AuthErrors = {
     ko: "리프레시 토큰이 필요합니다",
   }),
 } as const;
+
+export const AuthErrorCodes = Object.keys(AuthErrors).reduce(
+  (acc, key) => ({ ...acc, [key]: key }),
+  {} as { [K in keyof typeof AuthErrors]: K },
+);

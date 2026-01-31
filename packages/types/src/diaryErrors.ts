@@ -40,3 +40,8 @@ export const DiaryErrors = {
     ko: "내용은 5000자 이하로 입력해 주세요.",
   }),
 } as const;
+
+export const DiaryErrorCodes = Object.keys(DiaryErrors).reduce(
+  (acc, key) => ({ ...acc, [key]: key }),
+  {} as { [K in keyof typeof DiaryErrors]: K },
+);

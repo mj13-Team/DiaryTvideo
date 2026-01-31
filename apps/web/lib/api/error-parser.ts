@@ -3,6 +3,7 @@ import { Language } from "@repo/types";
 export interface ApiError {
   status: number;
   message: string;
+  errorCode?: string;
   errors?: Array<{ path: string[]; message: string }>;
 }
 
@@ -54,6 +55,7 @@ export async function parseApiError(
     return {
       status,
       message: parseI18nMessage(message, language),
+      ...(body.errorCode && { errorCode: body.errorCode }),
     };
   } catch {
     return {
