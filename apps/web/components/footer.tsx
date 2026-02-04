@@ -19,10 +19,10 @@ export function Footer() {
             <p>
               {t.developedBy} v0 Team • {t.contact}:{" "}
               <a
-                href="mailto:developer@mydiary.com"
+                href="mailto:contact@diarytvideo.com"
                 className="text-foreground underline-offset-4 hover:underline"
               >
-                developer@mydiary.com
+                contact@diarytvideo.com
               </a>
             </p>
             <p className="mt-1">{t.poweredBy} Next.js & React</p>

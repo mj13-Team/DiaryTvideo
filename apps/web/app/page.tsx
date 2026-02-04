@@ -75,9 +75,7 @@ export default function IntroPage() {
                   {language === "en" ? "한국어" : "English"}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() =>
-                    setTheme(theme === "dark" ? "light" : "dark")
-                  }
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                 >
                   {theme === "dark" ? (
                     <Sun className="h-4 w-4" />
