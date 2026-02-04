@@ -3,13 +3,30 @@
 import type React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { BookOpen, PenLine, Lock, Sparkles } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
+import {
+  BookOpen,
+  PenLine,
+  Lock,
+  Sparkles,
+  Menu,
+  Moon,
+  Sun,
+  Languages,
+} from "lucide-react";
+import { ThemeToggle, useTheme } from "@/components/theme-toggle";
 import { LanguageToggle, useLanguage } from "@/components/language-toggle";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { translations } from "@/lib/translations";
 
 export default function IntroPage() {
-  const { language } = useLanguage();
+  const { language, setLanguage } = useLanguage();
+  const { theme, setTheme } = useTheme();
   const t = translations[language];
 
   return (
@@ -23,7 +40,8 @@ export default function IntroPage() {
               {t.project_name}
             </span>
           </div>
-          <div className="flex items-center gap-3">
+          {/* Desktop */}
+          <div className="hidden sm:flex items-center gap-3">
             <LanguageToggle />
             <ThemeToggle />
             <Link href="/login">
@@ -39,6 +57,44 @@ export default function IntroPage() {
                 {t.getStarted}
               </Button>
             </Link>
+          </div>
+
+          {/* Mobile */}
+          <div className="flex sm:hidden items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  onClick={() => setLanguage(language === "en" ? "ko" : "en")}
+                >
+                  <Languages className="h-4 w-4" />
+                  {language === "en" ? "한국어" : "English"}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    setTheme(theme === "dark" ? "light" : "dark")
+                  }
+                >
+                  {theme === "dark" ? (
+                    <Sun className="h-4 w-4" />
+                  ) : (
+                    <Moon className="h-4 w-4" />
+                  )}
+                  {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/login">{t.signIn}</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/register">{t.getStarted}</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>

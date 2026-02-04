@@ -80,8 +80,7 @@ export class EmailService {
     token: string,
   ): Promise<void> {
     const frontendUrl =
-      this.configService.get<string>("app.frontend.url") ||
-      "http://localhost:3000";
+      this.configService.get<string>("frontend.url") || "http://localhost:3000";
     const resetLink = `${frontendUrl}/reset-password?token=${token}`;
 
     const html = `

@@ -4,16 +4,33 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DiaryList } from "@/components/diary-list";
 import { Button } from "@/components/ui/button";
-import { PenLine, LogOut, BookOpen, UserCircle } from "lucide-react";
+import {
+  PenLine,
+  LogOut,
+  BookOpen,
+  UserCircle,
+  Menu,
+  Moon,
+  Sun,
+  Languages,
+} from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle, useTheme } from "@/components/theme-toggle";
 import { LanguageToggle, useLanguage } from "@/components/language-toggle";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { translations } from "@/lib/translations";
 
 export default function DiaryPage() {
   const { user, isLoading, logout } = useAuth();
   const router = useRouter();
-  const { language } = useLanguage();
+  const { language, setLanguage } = useLanguage();
+  const { theme, setTheme } = useTheme();
 
   const handleLogout = async () => {
     await logout();
@@ -53,7 +70,8 @@ export default function DiaryPage() {
               </div>
             </Link>
           </div>
-          <div className="flex items-center gap-2">
+          {/* Desktop */}
+          <div className="hidden sm:flex items-center gap-2">
             <LanguageToggle />
             <ThemeToggle />
             <Link href="/diary/account">
@@ -75,6 +93,57 @@ export default function DiaryPage() {
             >
               <LogOut className="h-4 w-4" />
             </Button>
+          </div>
+
+          {/* Mobile */}
+          <div className="flex sm:hidden items-center gap-2">
+            <Link href="/diary/new">
+              <Button
+                size="icon"
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                <PenLine className="h-4 w-4" />
+              </Button>
+            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  onClick={() => setLanguage(language === "en" ? "ko" : "en")}
+                >
+                  <Languages className="h-4 w-4" />
+                  {language === "en" ? "한국어" : "English"}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    setTheme(theme === "dark" ? "light" : "dark")
+                  }
+                >
+                  {theme === "dark" ? (
+                    <Sun className="h-4 w-4" />
+                  ) : (
+                    <Moon className="h-4 w-4" />
+                  )}
+                  {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/diary/account">
+                    <UserCircle className="h-4 w-4" />
+                    {t.account}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="h-4 w-4" />
+                  {t.logout}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
