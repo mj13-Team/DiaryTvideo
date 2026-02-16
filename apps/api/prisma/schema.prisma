@@ -42,9 +42,6 @@ model User {
   subscriptionEndDate     DateTime?
   subscriptionCancelledAt DateTime?
 
-  // ─── Stripe 정보 ───
-  stripeCustomerId String? @unique
-
   // ─── 영상 변환 사용량 관리 ───
   videoConversionRemaining Int       @default(0)
   videoConversionResetDate DateTime?
@@ -60,7 +57,6 @@ model User {
   @@index([plan])
   @@index([subscriptionStatus])
   @@index([subscriptionEndDate])
-  @@index([stripeCustomerId])
   @@map("users")
 }
 
@@ -122,17 +118,12 @@ model Subscription {
   price    Float
   currency String @default("USD")
 
-  // Stripe 정보
-  stripeSubscriptionId String? @unique
-  stripePriceId        String?
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId, status])
   @@index([endDate])
   @@index([nextBillingDate])
-  @@index([stripeSubscriptionId])
   @@map("subscriptions")
 }
 
@@ -141,9 +132,8 @@ model Payment {
   userId Int
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Stripe 결제 정보
-  stripePaymentIntentId String  @unique
-  stripeChargeId        String? @unique
+  // PortOne 결제 정보
+  portonePaymentId String @unique
 
   amount   Float
   currency String @default("USD")
@@ -166,7 +156,7 @@ model Payment {
 
   @@index([userId, createdAt])
   @@index([status])
-  @@index([stripePaymentIntentId])
+  @@index([portonePaymentId])
   @@map("payments")
 }
 
