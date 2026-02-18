@@ -22,6 +22,9 @@ import {
   Trash2,
   CheckCircle,
   AlertTriangle,
+  Crown,
+  Receipt,
+  ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -45,6 +48,11 @@ export default function AccountPage() {
   const [userProfile, setUserProfile] = useState<UserData | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
+  // Payment history filter state
+  const [selectedYear, setSelectedYear] = useState<number>(
+    new Date().getFullYear(),
+  );
+
   // Name change state
   const [newName, setNewName] = useState("");
   const [nameSuccess, setNameSuccess] = useState(false);
@@ -67,7 +75,7 @@ export default function AccountPage() {
 
   const t = translations[language];
 
-  // Fetch user profile on mount
+  // Fetch user profile
   useEffect(() => {
     async function fetchProfile() {
       try {
@@ -179,7 +187,7 @@ export default function AccountPage() {
     return null;
   }
 
-  // Format memberSince date
+  // Format date
   const formatDate = (date: Date | string) => {
     const d = new Date(date);
     return d.toLocaleDateString(language === "ko" ? "ko-KR" : "en-US", {
@@ -188,6 +196,16 @@ export default function AccountPage() {
       day: "numeric",
     });
   };
+
+  // Year options for filter
+  const currentYear = new Date().getFullYear();
+  const memberYear = userProfile?.createdAt
+    ? new Date(userProfile.createdAt).getFullYear()
+    : currentYear;
+  const yearOptions: number[] = [];
+  for (let y = currentYear; y >= memberYear; y--) {
+    yearOptions.push(y);
+  }
 
   return (
     <main className="min-h-screen bg-background">
@@ -349,6 +367,93 @@ export default function AccountPage() {
                   {isUpdatingPassword ? "Updating..." : t.updatePassword}
                 </Button>
               </form>
+            </CardContent>
+          </Card>
+
+          {/* Current Subscription */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Crown className="h-5 w-5" />
+                {t.currentSubscription}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">{t.plan}</p>
+                  <p className="font-medium">{t.free}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">{t.status}</p>
+                  <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                    {t.statusNone}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">{t.expiresOn}</p>
+                  <p className="font-medium text-muted-foreground">-</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    {t.videoConversionsLeft}
+                  </p>
+                  <p className="font-medium text-muted-foreground">-</p>
+                </div>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Link href="/pricing">
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                    {t.upgradePlan}
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Payment History */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Receipt className="h-5 w-5" />
+                  {t.paymentHistory}
+                </CardTitle>
+                <div className="relative">
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                    className="appearance-none rounded-md border border-border bg-background px-3 py-1.5 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    {yearOptions.map((y) => (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border border-border">
+                <div className="grid grid-cols-3 gap-4 border-b border-border bg-muted/50 px-4 py-3">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {t.date}
+                  </p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {t.amount}
+                  </p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {t.paymentStatus}
+                  </p>
+                </div>
+                <div className="flex items-center justify-center py-8">
+                  <p className="text-sm text-muted-foreground">
+                    {t.noPaymentHistory}
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 

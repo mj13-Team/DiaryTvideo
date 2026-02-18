@@ -9,7 +9,7 @@ import {
   PaymentErrors,
   ApiResponse,
   PreparePaymentResponse,
-  PaymentHistoryResponse,
+  PaginatedPaymentHistoryResponse,
 } from "@repo/types";
 import {
   PlanType as PrismaPlanType,
@@ -163,25 +163,53 @@ export class PaymentService {
 
   async getPaymentHistory(
     userId: number,
-  ): Promise<ApiResponse<PaymentHistoryResponse>> {
-    const payments = await this.prisma.payment.findMany({
-      where: { userId },
+    options?: { year?: number; cursor?: string; limit?: number },
+  ): Promise<ApiResponse<PaginatedPaymentHistoryResponse>> {
+    const limit = options?.limit || 5;
+
+    const where: Record<string, unknown> = { userId };
+
+    if (options?.year) {
+      const startDate = new Date(`${options.year}-01-01T00:00:00.000Z`);
+      const endDate = new Date(`${options.year + 1}-01-01T00:00:00.000Z`);
+      where.createdAt = { gte: startDate, lt: endDate };
+    }
+
+    const total = await this.prisma.payment.count({ where });
+
+    const findOptions: Record<string, unknown> = {
+      where,
       orderBy: { createdAt: "desc" },
-      take: 20,
-    });
+      take: limit + 1,
+    };
+
+    if (options?.cursor) {
+      findOptions.cursor = { id: options.cursor };
+      findOptions.skip = 1;
+    }
+
+    const payments = await this.prisma.payment.findMany(findOptions as never);
+
+    const hasMore = payments.length > limit;
+    const items = hasMore ? payments.slice(0, limit) : payments;
+    const nextCursor = hasMore ? items[items.length - 1].id : null;
 
     return {
       success: true,
-      data: payments.map((payment) => ({
-        id: payment.id,
-        amount: payment.amount,
-        currency: payment.currency,
-        planType: payment.planType as PlanType,
-        billingCycle: payment.billingCycle as BillingCycle,
-        status: payment.status as PaymentStatusType,
-        paidAt: payment.paidAt,
-        createdAt: payment.createdAt,
-      })),
+      data: {
+        items: items.map((payment) => ({
+          id: payment.id,
+          amount: payment.amount,
+          currency: payment.currency,
+          planType: payment.planType as PlanType,
+          billingCycle: payment.billingCycle as BillingCycle,
+          status: payment.status as PaymentStatusType,
+          paidAt: payment.paidAt,
+          createdAt: payment.createdAt,
+        })),
+        nextCursor,
+        total,
+      },
     };
   }
 

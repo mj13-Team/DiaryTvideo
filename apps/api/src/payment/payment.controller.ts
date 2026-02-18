@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UseGuards } from "@nestjs/common";
+import { Controller, Post, Get, Body, Query, UseGuards } from "@nestjs/common";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { PaymentService } from "./payment.service";
@@ -8,6 +8,7 @@ import {
   PreparePaymentRequestSchema,
   CompletePaymentRequest,
   CompletePaymentRequestSchema,
+  PaymentHistoryQuery,
 } from "@repo/types";
 import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe";
 
@@ -41,8 +42,15 @@ export class PaymentController {
 
   @Get("history")
   @UseGuards(JwtAuthGuard)
-  async getPaymentHistory(@CurrentUser() user: JwtAccessPayload) {
-    return this.paymentService.getPaymentHistory(user.sub);
+  async getPaymentHistory(
+    @CurrentUser() user: JwtAccessPayload,
+    @Query() query: PaymentHistoryQuery,
+  ) {
+    return this.paymentService.getPaymentHistory(user.sub, {
+      year: query.year ? Number(query.year) : undefined,
+      cursor: query.cursor || undefined,
+      limit: query.limit ? Number(query.limit) : undefined,
+    });
   }
 
   @Post("webhook")

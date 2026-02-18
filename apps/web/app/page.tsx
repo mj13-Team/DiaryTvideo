@@ -44,6 +44,14 @@ export default function IntroPage() {
           <div className="hidden sm:flex items-center gap-3">
             <LanguageToggle />
             <ThemeToggle />
+            <Link href="/pricing">
+              <Button
+                variant="ghost"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                {t.pricing}
+              </Button>
+            </Link>
             <Link href="/login">
               <Button
                 variant="ghost"
@@ -85,6 +93,9 @@ export default function IntroPage() {
                   {theme === "dark" ? "Light Mode" : "Dark Mode"}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/pricing">{t.pricing}</Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/login">{t.signIn}</Link>
                 </DropdownMenuItem>

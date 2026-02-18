@@ -108,6 +108,10 @@ export const translations: { [key in Language]: { [key: string]: string } } = {
       "Are you sure you want to delete this entry? This action cannot be undone.",
     deleteConfirm: "Delete",
 
+    // Diary Entry - Video Conversion
+    enableVideoConversion: "Generate video from this entry",
+    videoStyleLabel: "Video style",
+    videoStylePlaceholder: "e.g. cinematic, warm tone, watercolor...",
     // Account Page
     account: "Account",
     accountSettings: "Account Settings",
@@ -139,6 +143,73 @@ export const translations: { [key in Language]: { [key: string]: string } } = {
     developedBy: COOMON_TRANSLATIONS.developedBy,
     poweredBy: COOMON_TRANSLATIONS.poweredBy,
     contact: COOMON_TRANSLATIONS.contact,
+
+    // Pricing Page
+    pricing: "Pricing",
+    choosePlan: "Choose Your Plan",
+    choosePlanDesc:
+      "Start for free, upgrade when you need more. Simple, transparent pricing.",
+    monthly: "Monthly",
+    yearly: "Yearly",
+    savePercent: "Save {percent}%",
+    free: "Free",
+    pro: "Pro",
+    currentPlan: "Current Plan",
+    getStartedFree: "Get Started Free",
+    upgradeToPro: "Upgrade to Pro",
+    perMonth: "/month",
+    perYear: "/year",
+    billedYearly: "Billed yearly",
+    mostPopular: "Most Popular",
+    // Plan Features
+    featureDiaryEntries: "Unlimited diary entries",
+    featureTextView: "Text view",
+    featureVideoPerDay: "{count} video conversion per day",
+    featureVideosPerDay: "{count} video conversions per day",
+    featureVideosPerMonth: "{count} video conversions per month",
+    featureUnlimitedVideos: "Unlimited video conversions",
+    featurePriorityProcessing: "Priority video processing",
+    featureCloudBackup: "Cloud backup",
+    featureExportData: "Export your data",
+    faqTitle: "Frequently Asked Questions",
+    faqQ1: "Can I cancel anytime?",
+    faqA1:
+      "Yes, you can cancel your subscription at any time. Your Pro features will remain active until the end of your billing period.",
+    faqQ2: "What payment methods are accepted?",
+    faqA2:
+      "We accept credit cards, debit cards, and various local payment methods through our payment provider.",
+    faqQ3: "What happens when my subscription expires?",
+    faqA3:
+      "Your account will revert to the Free plan. All your diary entries remain safe, but video conversion limits will apply.",
+
+    // Subscription (Account Page)
+    subscription: "Subscription",
+    subscriptionManagement: "Subscription Management",
+    currentSubscription: "Current Subscription",
+    plan: "Plan",
+    status: "Status",
+    statusActive: "Active",
+    statusExpired: "Expired",
+    statusCancelled: "Cancelled",
+    statusNone: "No subscription",
+    expiresOn: "Expires on",
+    videoConversionsLeft: "Video conversions left today",
+    videoConversionsUnlimited: "Unlimited",
+    upgradePlan: "Upgrade Plan",
+    cancelSubscription: "Cancel Subscription",
+    cancelSubscriptionWarning:
+      "Your Pro features will remain active until the end of your current billing period.",
+    paymentHistory: "Payment History",
+    noPaymentHistory: "No payment history yet.",
+    date: "Date",
+    amount: "Amount",
+    paymentStatus: "Status",
+    paymentStatusPaid: "Paid",
+    paymentStatusPending: "Pending",
+    paymentStatusFailed: "Failed",
+    loadMore: "Load more",
+    allYears: "All",
+    viewPricing: "View Pricing",
 
     // Video Status
     videoStatusPending: "Pending",
@@ -250,6 +321,10 @@ export const translations: { [key in Language]: { [key: string]: string } } = {
       "정말로 이 일기를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
     deleteConfirm: "삭제",
 
+    // Diary Entry - Video Conversion
+    enableVideoConversion: "이 일기로 영상 생성하기",
+    videoStyleLabel: "영상 스타일",
+    videoStylePlaceholder: "예: 시네마틱, 따뜻한 톤, 수채화...",
     // Account Page
     account: "계정",
     accountSettings: "계정 설정",
@@ -280,6 +355,72 @@ export const translations: { [key in Language]: { [key: string]: string } } = {
     developedBy: COOMON_TRANSLATIONS.developedBy,
     poweredBy: COOMON_TRANSLATIONS.poweredBy,
     contact: COOMON_TRANSLATIONS.contact,
+
+    // Pricing Page
+    pricing: "요금제",
+    choosePlan: "요금제를 선택하세요",
+    choosePlanDesc:
+      "무료로 시작하고, 필요할 때 업그레이드하세요. 간단하고 투명한 요금제.",
+    monthly: "월간",
+    yearly: "연간",
+    savePercent: "{percent}% 할인",
+    free: "무료",
+    pro: "프로",
+    currentPlan: "현재 플랜",
+    getStartedFree: "무료로 시작하기",
+    upgradeToPro: "프로로 업그레이드",
+    perMonth: "/월",
+    perYear: "/년",
+    billedYearly: "연간 결제",
+    mostPopular: "가장 인기",
+    // Plan Features
+    featureDiaryEntries: "무제한 일기 작성",
+    featureTextView: "텍스트 보기",
+    featureVideoPerDay: "하루 {count}회 영상 변환",
+    featureVideosPerDay: "하루 {count}회 영상 변환",
+    featureVideosPerMonth: "월 {count}회 영상 변환",
+    featureUnlimitedVideos: "무제한 영상 변환",
+    featurePriorityProcessing: "우선 영상 처리",
+    featureCloudBackup: "클라우드 백업",
+    featureExportData: "데이터 내보내기",
+    faqTitle: "자주 묻는 질문",
+    faqQ1: "언제든지 취소할 수 있나요?",
+    faqA1:
+      "네, 언제든지 구독을 취소할 수 있습니다. 프로 기능은 현재 결제 기간이 끝날 때까지 유지됩니다.",
+    faqQ2: "어떤 결제 방법을 지원하나요?",
+    faqA2: "신용카드, 체크카드 및 다양한 결제 수단을 지원합니다.",
+    faqQ3: "구독이 만료되면 어떻게 되나요?",
+    faqA3:
+      "계정이 무료 플랜으로 전환됩니다. 모든 일기는 안전하게 보관되지만, 영상 변환 제한이 적용됩니다.",
+
+    // Subscription (Account Page)
+    subscription: "구독",
+    subscriptionManagement: "구독 관리",
+    currentSubscription: "현재 구독",
+    plan: "플랜",
+    status: "상태",
+    statusActive: "활성",
+    statusExpired: "만료됨",
+    statusCancelled: "취소됨",
+    statusNone: "구독 없음",
+    expiresOn: "만료일",
+    videoConversionsLeft: "오늘 남은 영상 변환",
+    videoConversionsUnlimited: "무제한",
+    upgradePlan: "플랜 업그레이드",
+    cancelSubscription: "구독 취소",
+    cancelSubscriptionWarning:
+      "프로 기능은 현재 결제 기간이 끝날 때까지 유지됩니다.",
+    paymentHistory: "결제 내역",
+    noPaymentHistory: "결제 내역이 없습니다.",
+    date: "날짜",
+    amount: "금액",
+    paymentStatus: "상태",
+    paymentStatusPaid: "결제 완료",
+    paymentStatusPending: "대기 중",
+    paymentStatusFailed: "실패",
+    loadMore: "더보기",
+    allYears: "전체",
+    viewPricing: "요금제 보기",
 
     // Video Status
     videoStatusPending: "대기 중",

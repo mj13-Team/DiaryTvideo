@@ -160,20 +160,6 @@ model Payment {
   @@map("payments")
 }
 
-model DailyDiaryLimit {
-  id         String @id @default(uuid())
-  userId     Int
-  localDate  String // YYYY-MM-DD
-  diaryCount Int    @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([userId, localDate])
-  @@index([userId, localDate])
-  @@map("daily_diary_limits")
-}
-
 enum VideoStatus {
   PENDING
   PROCESSING

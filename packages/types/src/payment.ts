@@ -22,6 +22,12 @@ export const CompletePaymentRequestSchema = z.object({
   paymentId: z.string().min(1),
 });
 
+export interface PaymentHistoryQuery {
+  year?: string;
+  cursor?: string;
+  limit?: string;
+}
+
 export type PreparePaymentRequest = z.infer<typeof PreparePaymentRequestSchema>;
 export type CompletePaymentRequest = z.infer<
   typeof CompletePaymentRequestSchema
@@ -48,10 +54,19 @@ export const PaymentHistoryItemSchema = z.object({
 
 export const PaymentHistoryResponseSchema = z.array(PaymentHistoryItemSchema);
 
+export const PaginatedPaymentHistoryResponseSchema = z.object({
+  items: z.array(PaymentHistoryItemSchema),
+  nextCursor: z.string().nullable(),
+  total: z.number().int().min(0),
+});
+
 export type PreparePaymentResponse = z.infer<
   typeof PreparePaymentResponseSchema
 >;
 export type PaymentHistoryItem = z.infer<typeof PaymentHistoryItemSchema>;
 export type PaymentHistoryResponse = z.infer<
   typeof PaymentHistoryResponseSchema
+>;
+export type PaginatedPaymentHistoryResponse = z.infer<
+  typeof PaginatedPaymentHistoryResponseSchema
 >;
