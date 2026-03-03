@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../prisma/prisma.service";
 import { PortOneService } from "./portone.service";
 import { SubscriptionService } from "../subscription/subscription.service";
@@ -10,21 +11,15 @@ import {
   ApiResponse,
   PreparePaymentResponse,
   PaginatedPaymentHistoryResponse,
+  PricingResponse,
 } from "@repo/types";
 import {
   PlanType as PrismaPlanType,
   BillingCycle as PrismaBillingCycle,
   PaymentStatus as PrismaPaymentStatus,
+  SubscriptionStatus as PrismaSubscriptionStatus,
 } from "@prisma/client";
 import { randomUUID } from "crypto";
-
-// 플랜별 가격 (USD, cents 단위)
-const PLAN_PRICES: Record<string, Record<string, number>> = {
-  PRO: {
-    MONTHLY: 2000, // $20.00
-    YEARLY: 20000, // $200.00
-  },
-};
 
 @Injectable()
 export class PaymentService {
@@ -32,6 +27,7 @@ export class PaymentService {
     private prisma: PrismaService,
     private portoneService: PortOneService,
     private subscriptionService: SubscriptionService,
+    private configService: ConfigService,
   ) {}
 
   /**
@@ -43,13 +39,29 @@ export class PaymentService {
     planType: PlanType,
     billingCycle: BillingCycle,
   ): Promise<ApiResponse<PreparePaymentResponse>> {
+    // 만료 체크 먼저 실행
+    await this.subscriptionService.checkAndExpireIfNeeded(userId);
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { email: true, name: true },
+      select: {
+        email: true,
+        name: true,
+        plan: true,
+        subscriptionStatus: true,
+      },
     });
 
     if (!user) {
       throw new BadRequestException(PaymentErrors.USER_NOT_FOUND);
+    }
+
+    // 이미 활성 구독 중인 경우 중복 결제 방지
+    if (
+      user.plan === PrismaPlanType.PRO &&
+      user.subscriptionStatus === PrismaSubscriptionStatus.ACTIVE
+    ) {
+      throw new BadRequestException(PaymentErrors.SUBSCRIPTION_ALREADY_ACTIVE);
     }
 
     const amount = this.getAmount(planType, billingCycle);
@@ -64,8 +76,8 @@ export class PaymentService {
       data: {
         userId,
         portonePaymentId: paymentId,
-        amount: amount / 100,
-        currency: "USD",
+        amount: amount,
+        currency: this.configService.get<string>("payment.currency") ?? "KRW",
         planType: planType as PrismaPlanType,
         billingCycle: billingCycle as PrismaBillingCycle,
         status: PrismaPaymentStatus.PENDING,
@@ -78,7 +90,7 @@ export class PaymentService {
         paymentId,
         orderName,
         amount,
-        currency: "USD",
+        currency: this.configService.get<string>("payment.currency") ?? "KRW",
       },
     };
   }
@@ -91,7 +103,6 @@ export class PaymentService {
     userId: number,
     paymentId: string,
   ): Promise<ApiResponse> {
-    // DB에서 Payment 레코드 확인
     const payment = await this.prisma.payment.findUnique({
       where: { portonePaymentId: paymentId },
     });
@@ -167,7 +178,11 @@ export class PaymentService {
   ): Promise<ApiResponse<PaginatedPaymentHistoryResponse>> {
     const limit = options?.limit || 5;
 
-    const where: Record<string, unknown> = { userId };
+    const where: Record<string, unknown> = {
+      userId,
+      // PENDING(결제창만 열었다가 닫힌 것) 제외
+      status: { not: PrismaPaymentStatus.PENDING },
+    };
 
     if (options?.year) {
       const startDate = new Date(`${options.year}-01-01T00:00:00.000Z`);
@@ -228,32 +243,114 @@ export class PaymentService {
         where: { portonePaymentId: paymentId },
       });
 
-      // 이미 처리된 결제는 무시
       if (!payment || payment.status !== PrismaPaymentStatus.PENDING) return;
 
-      // PortOne API로 결제 상태 재확인
       const portonePayment = await this.portoneService.getPayment(paymentId);
 
-      if (portonePayment.status === "PAID") {
+      if (portonePayment.status !== "PAID") return;
+
+      // 금액 검증
+      const expectedAmount = this.getAmount(
+        payment.planType as PlanType,
+        payment.billingCycle as BillingCycle,
+      );
+      if (portonePayment.amount.total !== expectedAmount) {
         await this.prisma.payment.update({
           where: { portonePaymentId: paymentId },
           data: {
-            status: PrismaPaymentStatus.PAID,
-            paidAt: new Date(),
+            status: PrismaPaymentStatus.FAILED,
+            failedAt: new Date(),
+            failureReason: `Webhook amount mismatch: expected ${expectedAmount}, got ${portonePayment.amount.total}`,
           },
         });
-
-        await this.subscriptionService.activateSubscription(
-          payment.userId,
-          payment.planType,
-          payment.billingCycle,
-        );
+        return;
       }
+
+      await this.prisma.payment.update({
+        where: { portonePaymentId: paymentId },
+        data: {
+          status: PrismaPaymentStatus.PAID,
+          paidAt: new Date(),
+          paymentMethod: portonePayment.method?.type ?? null,
+          cardBrand: portonePayment.method?.card?.name ?? null,
+          cardLast4: portonePayment.method?.card?.number?.slice(-4) ?? null,
+        },
+      });
+
+      await this.subscriptionService.activateSubscription(
+        payment.userId,
+        payment.planType,
+        payment.billingCycle,
+      );
     }
+
+    if (
+      body.type === "Transaction.Failed" ||
+      body.type === "Transaction.Cancelled"
+    ) {
+      const payment = await this.prisma.payment.findUnique({
+        where: { portonePaymentId: paymentId },
+      });
+
+      if (!payment || payment.status !== PrismaPaymentStatus.PENDING) return;
+
+      await this.prisma.payment.update({
+        where: { portonePaymentId: paymentId },
+        data: {
+          status:
+            body.type === "Transaction.Cancelled"
+              ? PrismaPaymentStatus.CANCELLED
+              : PrismaPaymentStatus.FAILED,
+          failedAt: new Date(),
+          failureReason: `Webhook: ${body.type}`,
+        },
+      });
+    }
+  }
+
+  getPricing(): ApiResponse<PricingResponse> {
+    return {
+      success: true,
+      data: {
+        proMonthlyPrice:
+          this.configService.get<number>("payment.proMonthlyPrice") ?? 29000,
+        proYearlyPrice:
+          this.configService.get<number>("payment.proYearlyPrice") ?? 290000,
+        currency: this.configService.get<string>("payment.currency") ?? "KRW",
+      },
+    };
+  }
+
+  async cancelPayment(userId: number, paymentId: string): Promise<ApiResponse> {
+    const payment = await this.prisma.payment.findUnique({
+      where: { portonePaymentId: paymentId },
+    });
+
+    if (!payment || payment.userId !== userId) {
+      throw new BadRequestException(PaymentErrors.PAYMENT_RECORD_NOT_FOUND);
+    }
+
+    if (payment.status !== PrismaPaymentStatus.PENDING) {
+      return { success: true };
+    }
+
+    await this.prisma.payment.update({
+      where: { portonePaymentId: paymentId },
+      data: {
+        status: PrismaPaymentStatus.CANCELLED,
+        failedAt: new Date(),
+        failureReason: "User cancelled",
+      },
+    });
+
+    return { success: true };
   }
 
   private getAmount(planType: PlanType, billingCycle: BillingCycle): number {
     if (planType === "FREE") return 0;
-    return PLAN_PRICES[planType]?.[billingCycle] ?? 0;
+    if (billingCycle === "MONTHLY") {
+      return this.configService.get<number>("payment.proMonthlyPrice") ?? 0;
+    }
+    return this.configService.get<number>("payment.proYearlyPrice") ?? 0;
   }
 }

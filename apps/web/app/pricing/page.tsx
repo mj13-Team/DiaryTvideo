@@ -1,8 +1,9 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -31,16 +32,53 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { translations } from "@/lib/translations";
+import { useAuth } from "@/components/auth-provider";
+import {
+  preparePayment,
+  completePayment,
+  cancelPayment,
+  getPricing,
+} from "@/lib/payment-store";
+import { getSubscription } from "@/lib/subscription-store";
+import { ApiError } from "@/lib/api";
+import * as PortOne from "@portone/browser-sdk/v2";
 
 export default function PricingPage() {
   const { language, setLanguage } = useLanguage();
   const { theme, setTheme } = useTheme();
   const t = translations[language];
+  const { user } = useAuth();
+  const router = useRouter();
   const [isYearly, setIsYearly] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
+  const [monthlyPrice, setMonthlyPrice] = useState(29000);
+  const [yearlyPrice, setYearlyPrice] = useState(290000);
+  const [portoneCurrency, setPortoneCurrency] = useState("CURRENCY_KRW");
+  const [isAlreadyPro, setIsAlreadyPro] = useState(false);
 
-  const monthlyPrice = 20;
-  const yearlyPrice = 200;
-  const yearlyMonthlyEquiv = Math.round((yearlyPrice / 12) * 100) / 100;
+  useEffect(() => {
+    getPricing().then((res) => {
+      if (res.success && res.data) {
+        setMonthlyPrice(res.data.proMonthlyPrice);
+        setYearlyPrice(res.data.proYearlyPrice);
+        setPortoneCurrency(`CURRENCY_${res.data.currency}`);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    getSubscription().then((res) => {
+      if (res.success && res.data) {
+        setIsAlreadyPro(
+          res.data.plan === "PRO" && res.data.status === "ACTIVE",
+        );
+      }
+    });
+  }, [user]);
+
+  const yearlyMonthlyEquiv = Math.round(yearlyPrice / 12);
   const savePercent = Math.round(
     ((monthlyPrice * 12 - yearlyPrice) / (monthlyPrice * 12)) * 100,
   );
@@ -66,12 +104,62 @@ export default function PricingPage() {
     { q: t.faqQ3, a: t.faqA3 },
   ];
 
+  async function handleUpgradeToPro() {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    setIsProcessing(true);
+    setPaymentError("");
+
+    try {
+      const res = await preparePayment({
+        planType: "PRO",
+        billingCycle: isYearly ? "YEARLY" : "MONTHLY",
+      });
+
+      if (!res.success || !res.data) {
+        throw new Error(t.paymentFailed);
+      }
+
+      const paymentRes = await PortOne.requestPayment({
+        storeId: process.env.NEXT_PUBLIC_PORTONE_STORE_ID!,
+        channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY!,
+        paymentId: res.data.paymentId,
+        orderName: res.data.orderName,
+        totalAmount: res.data.amount,
+        currency: portoneCurrency as Parameters<
+          typeof PortOne.requestPayment
+        >[0]["currency"],
+        payMethod: "CARD",
+      });
+
+      if (paymentRes?.code != null) {
+        await cancelPayment({ paymentId: res.data.paymentId });
+        throw new Error(paymentRes.message ?? t.paymentFailed);
+      }
+
+      await completePayment({ paymentId: res.data.paymentId });
+
+      router.push("/diary/account");
+    } catch (err) {
+      const apiError = err as ApiError;
+      setPaymentError(apiError.message || t.paymentFailed);
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-background">
       {/* Header - same as landing page */}
       <header className="border-b border-border">
         <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
+          <Link
+            href={user ? "/diary" : "/"}
+            className="flex items-center gap-2"
+          >
             <BookOpen className="h-6 w-6 text-primary" />
             <span className="font-serif text-xl font-semibold text-foreground">
               {t.project_name}
@@ -81,19 +169,29 @@ export default function PricingPage() {
           <div className="hidden sm:flex items-center gap-3">
             <LanguageToggle />
             <ThemeToggle />
-            <Link href="/login">
-              <Button
-                variant="ghost"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                {t.signIn}
-              </Button>
-            </Link>
-            <Link href="/register">
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                {t.getStarted}
-              </Button>
-            </Link>
+            {user ? (
+              <Link href="/diary">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                  {t.myDiary}
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button
+                    variant="ghost"
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    {t.signIn}
+                  </Button>
+                </Link>
+                <Link href="/register">
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                    {t.getStarted}
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile */}
@@ -122,12 +220,20 @@ export default function PricingPage() {
                   {theme === "dark" ? "Light Mode" : "Dark Mode"}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/login">{t.signIn}</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/register">{t.getStarted}</Link>
-                </DropdownMenuItem>
+                {user ? (
+                  <DropdownMenuItem asChild>
+                    <Link href="/diary">{t.myDiary}</Link>
+                  </DropdownMenuItem>
+                ) : (
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link href="/login">{t.signIn}</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/register">{t.getStarted}</Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -189,13 +295,17 @@ export default function PricingPage() {
               </CardDescription>
               <div className="mt-4">
                 <span className="font-serif text-4xl font-bold text-foreground">
-                  $0
+                  ₩0
                 </span>
                 <span className="text-muted-foreground">{t.perMonth}</span>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button variant="outline" className="w-full">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => router.push("/register")}
+              >
                 {t.getStartedFree}
               </Button>
               <ul className="space-y-3 pt-2">
@@ -223,21 +333,49 @@ export default function PricingPage() {
               </CardDescription>
               <div className="mt-4">
                 <span className="font-serif text-4xl font-bold text-foreground">
-                  ${isYearly ? yearlyMonthlyEquiv : monthlyPrice}
+                  ₩
+                  {(isYearly ? yearlyPrice : monthlyPrice).toLocaleString(
+                    "ko-KR",
+                  )}
                 </span>
-                <span className="text-muted-foreground">{t.perMonth}</span>
+                <span className="text-muted-foreground">
+                  {isYearly ? t.perYear : t.perMonth}
+                </span>
                 {isYearly && (
                   <p className="mt-1 text-sm text-muted-foreground">
-                    ${yearlyPrice}
-                    {t.perYear} · {t.billedYearly}
+                    {language === "en"
+                      ? `₩${yearlyMonthlyEquiv.toLocaleString("ko-KR")} / month`
+                      : `월 ₩${yearlyMonthlyEquiv.toLocaleString("ko-KR")} 상당`}
                   </p>
                 )}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                {t.upgradeToPro}
-              </Button>
+              {isAlreadyPro ? (
+                <Button variant="outline" className="w-full" disabled>
+                  {t.currentPlan}
+                </Button>
+              ) : (
+                <Button
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={handleUpgradeToPro}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? (
+                    <span className="flex items-center gap-2">
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                      {t.paymentProcessing}
+                    </span>
+                  ) : (
+                    t.upgradeToPro
+                  )}
+                </Button>
+              )}
+              {paymentError && (
+                <p className="text-sm text-destructive text-center">
+                  {paymentError}
+                </p>
+              )}
               <ul className="space-y-3 pt-2">
                 {proPlanFeatures.map((feature) => (
                   <li

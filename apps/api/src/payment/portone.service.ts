@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, BadRequestException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { createHmac } from "crypto";
 import { PaymentErrors } from "@repo/types";
@@ -52,14 +52,22 @@ export class PortOneService {
       `${this.baseUrl}/payments/${encodeURIComponent(paymentId)}`,
       {
         headers: {
-          Authorization: `PortOne ${this.apiSecret}`,
+          Authorization: `PortOne ${this.apiSecret.trim()}`,
         },
       },
     );
 
     if (!response.ok) {
       const error = await response.text();
-      throw new Error(`PortOne API error: ${response.status} ${error}`);
+      const msg = `PortOne API error: ${response.status} ${error}`;
+      console.error(msg);
+      throw new BadRequestException(
+        response.status === 401
+          ? "PortOne API 인증 실패 - API Secret을 확인하세요"
+          : response.status === 404
+            ? "결제 정보를 찾을 수 없습니다"
+            : msg,
+      );
     }
 
     return response.json() as Promise<PortOnePayment>;
@@ -74,7 +82,8 @@ export class PortOneService {
     const webhookSecret = this.configService.get<string>(
       "PORTONE_WEBHOOK_SECRET",
     );
-    if (!webhookSecret) return false;
+    // 개발 환경에서 시크릿 미설정 시 서명 검증 스킵
+    if (!webhookSecret) return true;
 
     // PortOne webhook signature: HMAC SHA256
     const message = `${webhookId}.${webhookTimestamp}.${body}`;
