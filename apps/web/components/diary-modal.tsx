@@ -77,7 +77,7 @@ export function DiaryModal({
           style={{ maxHeight: "calc(85vh - 73px)" }}
         >
           {/* Video Player or Status Placeholder */}
-          {view === "video" && (
+          {view === "video" && entry.videoConversionEnabled && (
             <div className="mb-6">
               {entry.videoStatus === "COMPLETED" && entry.videoUrl ? (
                 <VideoPlayer

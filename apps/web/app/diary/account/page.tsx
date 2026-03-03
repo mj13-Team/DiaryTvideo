@@ -36,8 +36,14 @@ import {
   updatePassword,
   deleteAccount,
 } from "@/lib/user-store";
+import { getSubscription, cancelSubscription } from "@/lib/subscription-store";
+import { getPaymentHistory } from "@/lib/payment-store";
 import { ApiError } from "@/lib/api";
-import { UserData } from "@repo/types";
+import {
+  UserData,
+  SubscriptionResponse,
+  PaymentHistoryItem,
+} from "@repo/types";
 
 export default function AccountPage() {
   const { user, isLoading, logout, setUser } = useAuth();
@@ -73,10 +79,33 @@ export default function AccountPage() {
   const [deleteError, setDeleteError] = useState("");
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
+  // Subscription state
+  const [subscription, setSubscription] = useState<SubscriptionResponse | null>(
+    null,
+  );
+  const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
+
+  // Cancel subscription state
+  const [showCancelSubConfirm, setShowCancelSubConfirm] = useState(false);
+  const [isCancellingSubscription, setIsCancellingSubscription] =
+    useState(false);
+  const [cancelSubError, setCancelSubError] = useState("");
+  const [cancelSubSuccess, setCancelSubSuccess] = useState(false);
+
+  // Payment history state
+  const [payments, setPayments] = useState<PaymentHistoryItem[]>([]);
+  const [paymentNextCursor, setPaymentNextCursor] = useState<string | null>(
+    null,
+  );
+  const [isLoadingPayments, setIsLoadingPayments] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
   const t = translations[language];
 
-  // Fetch user profile
+  // Fetch user profile and subscription on mount
   useEffect(() => {
+    if (!user) return;
+
     async function fetchProfile() {
       try {
         const response = await getMe();
@@ -91,10 +120,47 @@ export default function AccountPage() {
       }
     }
 
-    if (user) {
-      fetchProfile();
+    async function fetchSubscription() {
+      setIsLoadingSubscription(true);
+      try {
+        const res = await getSubscription();
+        if (res.success && res.data) {
+          setSubscription(res.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch subscription:", error);
+      } finally {
+        setIsLoadingSubscription(false);
+      }
     }
+
+    fetchProfile();
+    fetchSubscription();
   }, [user]);
+
+  // Fetch payment history when year changes
+  useEffect(() => {
+    if (!user) return;
+
+    async function fetchPayments() {
+      setIsLoadingPayments(true);
+      setPayments([]);
+      setPaymentNextCursor(null);
+      try {
+        const res = await getPaymentHistory({ year: selectedYear });
+        if (res.success && res.data) {
+          setPayments(res.data.items);
+          setPaymentNextCursor(res.data.nextCursor);
+        }
+      } catch (error) {
+        console.error("Failed to fetch payments:", error);
+      } finally {
+        setIsLoadingPayments(false);
+      }
+    }
+
+    fetchPayments();
+  }, [user, selectedYear]);
 
   const handleNameChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,6 +241,46 @@ export default function AccountPage() {
     }
   };
 
+  const handleCancelSubscription = async () => {
+    setIsCancellingSubscription(true);
+    setCancelSubError("");
+    try {
+      const res = await cancelSubscription();
+      if (res.success) {
+        setCancelSubSuccess(true);
+        setShowCancelSubConfirm(false);
+        const updated = await getSubscription();
+        if (updated.success && updated.data) {
+          setSubscription(updated.data);
+        }
+      }
+    } catch (err) {
+      const apiError = err as ApiError;
+      setCancelSubError(apiError.message);
+    } finally {
+      setIsCancellingSubscription(false);
+    }
+  };
+
+  const handleLoadMore = async () => {
+    if (!paymentNextCursor) return;
+    setIsLoadingMore(true);
+    try {
+      const res = await getPaymentHistory({
+        year: selectedYear,
+        cursor: paymentNextCursor,
+      });
+      if (res.success && res.data) {
+        setPayments((prev) => [...prev, ...res.data!.items]);
+        setPaymentNextCursor(res.data.nextCursor);
+      }
+    } catch (error) {
+      console.error("Failed to load more payments:", error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <main className="min-h-screen bg-background flex items-center justify-center">
@@ -206,6 +312,72 @@ export default function AccountPage() {
   for (let y = currentYear; y >= memberYear; y--) {
     yearOptions.push(y);
   }
+
+  const getStatusLabel = (
+    status: SubscriptionResponse["status"] | undefined,
+  ) => {
+    if (!status) return t.statusNone;
+    switch (status) {
+      case "ACTIVE":
+        return t.statusActive;
+      case "CANCELLED":
+        return t.statusCancelled;
+      case "EXPIRED":
+        return t.statusExpired;
+      case "INACTIVE":
+        return t.statusInactive;
+      default:
+        return t.statusNone;
+    }
+  };
+
+  const getStatusBadgeClass = (
+    status: SubscriptionResponse["status"] | undefined,
+  ) => {
+    switch (status) {
+      case "ACTIVE":
+        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+      case "CANCELLED":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
+      case "EXPIRED":
+        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
+      default:
+        return "bg-muted text-muted-foreground";
+    }
+  };
+
+  const getPaymentStatusLabel = (status: PaymentHistoryItem["status"]) => {
+    switch (status) {
+      case "PAID":
+        return t.paymentStatusPaid;
+      case "PENDING":
+        return t.paymentStatusPending;
+      case "FAILED":
+        return t.paymentStatusFailed;
+      case "CANCELLED":
+        return t.paymentStatusCancelled;
+      case "REFUNDED":
+        return t.paymentStatusRefunded;
+      default:
+        return status;
+    }
+  };
+
+  const getPaymentStatusClass = (status: PaymentHistoryItem["status"]) => {
+    switch (status) {
+      case "PAID":
+        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+      case "PENDING":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
+      case "FAILED":
+        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
+      default:
+        return "bg-muted text-muted-foreground";
+    }
+  };
+
+  const isPro = subscription?.plan === "PRO";
+  const isActiveSubscription = subscription?.status === "ACTIVE";
 
   return (
     <main className="min-h-screen bg-background">
@@ -382,32 +554,116 @@ export default function AccountPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">{t.plan}</p>
-                  <p className="font-medium">{t.free}</p>
+                  {isLoadingSubscription ? (
+                    <div className="h-5 w-16 animate-pulse bg-muted rounded mt-1" />
+                  ) : (
+                    <p className="font-medium">{isPro ? t.pro : t.free}</p>
+                  )}
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">{t.status}</p>
-                  <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                    {t.statusNone}
-                  </span>
+                  {isLoadingSubscription ? (
+                    <div className="h-5 w-20 animate-pulse bg-muted rounded mt-1" />
+                  ) : (
+                    <span
+                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadgeClass(subscription?.status)}`}
+                    >
+                      {getStatusLabel(subscription?.status)}
+                    </span>
+                  )}
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">{t.expiresOn}</p>
-                  <p className="font-medium text-muted-foreground">-</p>
+                  {isLoadingSubscription ? (
+                    <div className="h-5 w-24 animate-pulse bg-muted rounded mt-1" />
+                  ) : (
+                    <p className="font-medium text-muted-foreground">
+                      {subscription?.endDate
+                        ? formatDate(subscription.endDate)
+                        : "-"}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">
                     {t.videoConversionsLeft}
                   </p>
-                  <p className="font-medium text-muted-foreground">-</p>
+                  {isLoadingSubscription ? (
+                    <div className="h-5 w-12 animate-pulse bg-muted rounded mt-1" />
+                  ) : (
+                    <p className="font-medium text-muted-foreground">
+                      {subscription?.videoConversionRemaining ?? "-"}
+                    </p>
+                  )}
                 </div>
               </div>
+
+              {cancelSubSuccess && (
+                <p className="text-sm text-green-600 flex items-center gap-1">
+                  <CheckCircle className="h-4 w-4" />
+                  {t.subscriptionCancelled}
+                </p>
+              )}
+
               <div className="flex gap-2 pt-2">
-                <Link href="/pricing">
-                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                    {t.upgradePlan}
+                {(!isPro || (isPro && !isActiveSubscription)) && (
+                  <Link href="/pricing">
+                    <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                      {t.upgradePlan}
+                    </Button>
+                  </Link>
+                )}
+
+                {isPro && isActiveSubscription && !showCancelSubConfirm && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowCancelSubConfirm(true)}
+                  >
+                    {t.cancelSubscription}
                   </Button>
-                </Link>
+                )}
               </div>
+
+              {showCancelSubConfirm && (
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-start gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
+                    <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
+                    <p className="text-sm text-yellow-800 dark:text-yellow-300">
+                      {t.cancelSubscriptionWarning}
+                    </p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {t.confirmCancelSubscription}
+                  </p>
+                  {cancelSubError && (
+                    <p className="text-sm text-destructive">{cancelSubError}</p>
+                  )}
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={isCancellingSubscription}
+                      onClick={() => {
+                        setShowCancelSubConfirm(false);
+                        setCancelSubError("");
+                      }}
+                    >
+                      {t.cancel}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      disabled={isCancellingSubscription}
+                      onClick={handleCancelSubscription}
+                      className="flex items-center gap-2"
+                    >
+                      {isCancellingSubscription && (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      )}
+                      {t.cancelSubscription}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -448,11 +704,55 @@ export default function AccountPage() {
                     {t.paymentStatus}
                   </p>
                 </div>
-                <div className="flex items-center justify-center py-8">
-                  <p className="text-sm text-muted-foreground">
-                    {t.noPaymentHistory}
-                  </p>
-                </div>
+
+                {isLoadingPayments ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  </div>
+                ) : payments.length === 0 ? (
+                  <div className="flex items-center justify-center py-8">
+                    <p className="text-sm text-muted-foreground">
+                      {t.noPaymentHistory}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {payments.map((payment) => (
+                      <div
+                        key={payment.id}
+                        className="grid grid-cols-3 gap-4 border-b border-border px-4 py-3 last:border-0"
+                      >
+                        <p className="text-sm">
+                          {formatDate(payment.paidAt ?? payment.createdAt)}
+                        </p>
+                        <p className="text-sm">
+                          ₩{payment.amount.toLocaleString("ko-KR")}
+                        </p>
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium w-fit ${getPaymentStatusClass(payment.status)}`}
+                        >
+                          {getPaymentStatusLabel(payment.status)}
+                        </span>
+                      </div>
+                    ))}
+                    {paymentNextCursor && (
+                      <div className="flex justify-center py-3 border-t border-border">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleLoadMore}
+                          disabled={isLoadingMore}
+                          className="flex items-center gap-2"
+                        >
+                          {isLoadingMore && (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                          )}
+                          {t.loadMore}
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>

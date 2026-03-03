@@ -23,11 +23,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { translations } from "@/lib/translations";
+import { useAuth } from "@/components/auth-provider";
 
 export default function IntroPage() {
   const { language, setLanguage } = useLanguage();
   const { theme, setTheme } = useTheme();
   const t = translations[language];
+  const { user } = useAuth();
 
   return (
     <main className="min-h-screen bg-background">
@@ -52,19 +54,29 @@ export default function IntroPage() {
                 {t.pricing}
               </Button>
             </Link>
-            <Link href="/login">
-              <Button
-                variant="ghost"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                {t.signIn}
-              </Button>
-            </Link>
-            <Link href="/register">
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                {t.getStarted}
-              </Button>
-            </Link>
+            {user ? (
+              <Link href="/diary">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                  {t.myDiary}
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button
+                    variant="ghost"
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    {t.signIn}
+                  </Button>
+                </Link>
+                <Link href="/register">
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                    {t.getStarted}
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile */}
@@ -96,12 +108,20 @@ export default function IntroPage() {
                 <DropdownMenuItem asChild>
                   <Link href="/pricing">{t.pricing}</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/login">{t.signIn}</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/register">{t.getStarted}</Link>
-                </DropdownMenuItem>
+                {user ? (
+                  <DropdownMenuItem asChild>
+                    <Link href="/diary">{t.myDiary}</Link>
+                  </DropdownMenuItem>
+                ) : (
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link href="/login">{t.signIn}</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/register">{t.getStarted}</Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

@@ -1,7 +1,18 @@
 "use client";
 
-import { ApiResponse, PaginatedPaymentHistoryResponse } from "@repo/types";
+import {
+  ApiResponse,
+  PaginatedPaymentHistoryResponse,
+  PreparePaymentRequest,
+  PreparePaymentResponse,
+  CompletePaymentRequest,
+  PricingResponse,
+} from "@repo/types";
 import { api } from "./api";
+
+export async function getPricing(): Promise<ApiResponse<PricingResponse>> {
+  return api.get<ApiResponse<PricingResponse>>("/payments/pricing");
+}
 
 export async function getPaymentHistory(params?: {
   year?: number;
@@ -17,4 +28,28 @@ export async function getPaymentHistory(params?: {
     `/payments/history${qs ? `?${qs}` : ""}`,
     { withAuth: true },
   );
+}
+
+export async function preparePayment(
+  data: PreparePaymentRequest,
+): Promise<ApiResponse<PreparePaymentResponse>> {
+  return api.post<ApiResponse<PreparePaymentResponse>>(
+    "/payments/prepare",
+    data,
+    { withAuth: true },
+  );
+}
+
+export async function cancelPayment(
+  data: CompletePaymentRequest,
+): Promise<ApiResponse> {
+  return api.post<ApiResponse>("/payments/cancel", data, { withAuth: true });
+}
+
+export async function completePayment(
+  data: CompletePaymentRequest,
+): Promise<ApiResponse> {
+  return api.post<ApiResponse>("/payments/complete", data, {
+    withAuth: true,
+  });
 }

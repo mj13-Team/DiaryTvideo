@@ -42,21 +42,25 @@ export const DiaryCard = memo(function DiaryCard({
           )}
 
           {/* Status overlay */}
-          <VideoStatusIndicator
-            status={entry.videoStatus}
-            variant="overlay"
-            language={language}
-            message={entry.videoMessage ?? undefined}
-          />
+          {entry.videoConversionEnabled && (
+            <VideoStatusIndicator
+              status={entry.videoStatus}
+              variant="overlay"
+              language={language}
+              message={entry.videoMessage ?? undefined}
+            />
+          )}
 
           {/* Status badge */}
-          <VideoStatusIndicator
-            status={entry.videoStatus}
-            variant="badge"
-            language={language}
-            message={entry.videoMessage ?? undefined}
-            className="absolute bottom-2 right-2"
-          />
+          {entry.videoConversionEnabled && (
+            <VideoStatusIndicator
+              status={entry.videoStatus}
+              variant="badge"
+              language={language}
+              message={entry.videoMessage ?? undefined}
+              className="absolute bottom-2 right-2"
+            />
+          )}
         </button>
         <div className="p-4">
           <h3 className="font-serif text-lg font-semibold text-foreground line-clamp-1">

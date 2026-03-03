@@ -2,9 +2,10 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createEntry } from "@/lib/diary-store";
+import { getUsage } from "@/lib/subscription-store";
 import { ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -13,6 +14,7 @@ import { ArrowLeft, Video } from "lucide-react";
 import Link from "next/link";
 import { useLanguage } from "./language-toggle";
 import { translations } from "@/lib/translations";
+import type { UsageResponse } from "@repo/types";
 
 export function DiaryForm() {
   const router = useRouter();
@@ -22,9 +24,26 @@ export function DiaryForm() {
   const [error, setError] = useState("");
   const [enableVideo, setEnableVideo] = useState(false);
   const [videoStyle, setVideoStyle] = useState("");
+  const [usage, setUsage] = useState<UsageResponse | null>(null);
   const { language } = useLanguage();
 
   const t = translations[language];
+
+  useEffect(() => {
+    getUsage().then((res) => {
+      if (res.success && res.data) setUsage(res.data);
+    });
+  }, []);
+
+  const isFreePlan = usage?.plan === "FREE";
+  // 잔여 횟수가 없을 때만 비활성화 (PRO→FREE 전환 후 잔여가 남아 있으면 사용 가능)
+  const videoDisabled = usage !== null && usage.videoConversionRemaining === 0;
+  // "Pro 전용" 표시: FREE 플랜이고 잔여도 없을 때
+  const showUpgradeLabel = isFreePlan && videoDisabled;
+
+  useEffect(() => {
+    if (videoDisabled) setEnableVideo(false);
+  }, [videoDisabled]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +63,8 @@ export function DiaryForm() {
         title: title.trim(),
         content: content.trim(),
         localDate,
+        enableVideo,
+        videoStyle: videoStyle.trim() || undefined,
       });
       router.push("/diary");
     } catch (err) {
@@ -106,42 +127,57 @@ export function DiaryForm() {
         </div>
 
         {/* Video Conversion Toggle */}
-        <div className="rounded-lg border border-border bg-card p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Video className="h-4 w-4 text-primary" />
-              <Label
-                htmlFor="enableVideo"
-                className="text-sm font-medium cursor-pointer"
-              >
-                {t.enableVideoConversion}
-              </Label>
-            </div>
-            <Switch
-              id="enableVideo"
-              checked={enableVideo}
-              onCheckedChange={setEnableVideo}
-            />
-          </div>
-          {enableVideo && (
-            <div className="space-y-2 pt-1">
-              <Label
-                htmlFor="videoStyle"
-                className="text-sm text-muted-foreground"
-              >
-                {t.videoStyleLabel}
-              </Label>
-              <input
-                id="videoStyle"
-                type="text"
-                value={videoStyle}
-                onChange={(e) => setVideoStyle(e.target.value)}
-                placeholder={t.videoStylePlaceholder}
-                className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+        {!showUpgradeLabel && (
+          <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Video
+                  className={`h-4 w-4 ${videoDisabled ? "text-muted-foreground" : "text-primary"}`}
+                />
+                <Label
+                  htmlFor="enableVideo"
+                  className={`text-sm font-medium ${videoDisabled ? "text-muted-foreground cursor-not-allowed" : "cursor-pointer"}`}
+                >
+                  {t.enableVideoConversion}
+                </Label>
+                {usage && (
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                    {t.videoConversionsLeftMonth
+                      .replace(
+                        "{remaining}",
+                        String(usage.videoConversionRemaining),
+                      )
+                      .replace("{limit}", String(usage.limit))}
+                  </span>
+                )}
+              </div>
+              <Switch
+                id="enableVideo"
+                checked={enableVideo}
+                onCheckedChange={setEnableVideo}
+                disabled={videoDisabled}
               />
             </div>
-          )}
-        </div>
+            {enableVideo && (
+              <div className="space-y-2 pt-1">
+                <Label
+                  htmlFor="videoStyle"
+                  className="text-sm text-muted-foreground"
+                >
+                  {t.videoStyleLabel}
+                </Label>
+                <input
+                  id="videoStyle"
+                  type="text"
+                  value={videoStyle}
+                  onChange={(e) => setVideoStyle(e.target.value)}
+                  placeholder={t.videoStylePlaceholder}
+                  className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {error && (

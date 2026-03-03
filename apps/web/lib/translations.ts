@@ -14,6 +14,7 @@ export const translations: { [key in Language]: { [key: string]: string } } = {
     project_name: COOMON_TRANSLATIONS.project_name,
     signIn: "Sign In",
     getStarted: "Get Started",
+    myDiary: "My Diary",
     newEntry: "New Entry",
     logout: "Logout",
 
@@ -112,6 +113,8 @@ export const translations: { [key in Language]: { [key: string]: string } } = {
     enableVideoConversion: "Generate video from this entry",
     videoStyleLabel: "Video style",
     videoStylePlaceholder: "e.g. cinematic, warm tone, watercolor...",
+    videoPlanRequired: "Pro only",
+    videoConversionsLeftMonth: "{remaining}/{limit} left this month",
     // Account Page
     account: "Account",
     accountSettings: "Account Settings",
@@ -210,6 +213,16 @@ export const translations: { [key in Language]: { [key: string]: string } } = {
     loadMore: "Load more",
     allYears: "All",
     viewPricing: "View Pricing",
+    paymentProcessing: "Processing payment...",
+    paymentFailed: "Payment failed. Please try again.",
+    paymentSuccess: "Payment successful!",
+    confirmCancelSubscription:
+      "Are you sure you want to cancel your subscription?",
+    subscriptionCancelled: "Subscription cancelled successfully",
+    paymentStatusCancelled: "Cancelled",
+    paymentStatusRefunded: "Refunded",
+    loginRequired: "Please log in to continue",
+    statusInactive: "Inactive",
 
     // Video Status
     videoStatusPending: "Pending",
@@ -228,6 +241,7 @@ export const translations: { [key in Language]: { [key: string]: string } } = {
     project_name: COOMON_TRANSLATIONS.project_name,
     signIn: "로그인",
     getStarted: "시작하기",
+    myDiary: "내 일기",
     newEntry: "새 일기",
     logout: "로그아웃",
 
@@ -325,6 +339,8 @@ export const translations: { [key in Language]: { [key: string]: string } } = {
     enableVideoConversion: "이 일기로 영상 생성하기",
     videoStyleLabel: "영상 스타일",
     videoStylePlaceholder: "예: 시네마틱, 따뜻한 톤, 수채화...",
+    videoPlanRequired: "Pro 전용",
+    videoConversionsLeftMonth: "이번 달 {remaining}/{limit} 남음",
     // Account Page
     account: "계정",
     accountSettings: "계정 설정",
@@ -421,6 +437,15 @@ export const translations: { [key in Language]: { [key: string]: string } } = {
     loadMore: "더보기",
     allYears: "전체",
     viewPricing: "요금제 보기",
+    paymentProcessing: "결제 처리 중...",
+    paymentFailed: "결제에 실패했습니다. 다시 시도해 주세요.",
+    paymentSuccess: "결제가 완료되었습니다!",
+    confirmCancelSubscription: "정말 구독을 취소하시겠습니까?",
+    subscriptionCancelled: "구독이 취소되었습니다",
+    paymentStatusCancelled: "취소됨",
+    paymentStatusRefunded: "환불됨",
+    loginRequired: "계속하려면 로그인해 주세요",
+    statusInactive: "비활성",
 
     // Video Status
     videoStatusPending: "대기 중",
