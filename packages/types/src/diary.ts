@@ -14,6 +14,8 @@ export const CreateDiaryRequestSchema = z.object({
   localDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, DiaryErrors.DIARY_DATE_INVALID),
+  enableVideo: z.boolean().optional().default(false),
+  videoStyle: z.string().max(200).optional(),
 });
 
 export const GetDiaryQuerySchema = z.object({

@@ -33,6 +33,13 @@ export type CompletePaymentRequest = z.infer<
   typeof CompletePaymentRequestSchema
 >;
 
+// Pricing Response
+export interface PricingResponse {
+  proMonthlyPrice: number;
+  proYearlyPrice: number;
+  currency: string;
+}
+
 // Response DTOs
 export const PreparePaymentResponseSchema = z.object({
   paymentId: z.string(),

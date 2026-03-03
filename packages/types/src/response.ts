@@ -66,6 +66,7 @@ export const DiaryDataSchema = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
   deletedAt: z.date().nullable(),
+  videoConversionEnabled: z.boolean(),
   videoStatus: z.string(),
   videoError: z.string().nullable(),
   videoMessage: z.string().nullable().optional(),

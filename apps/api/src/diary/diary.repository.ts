@@ -53,8 +53,32 @@ export class DiaryRepository {
     title: string;
     content: string;
     localDate: string;
+    videoConversionEnabled?: boolean;
+    customStyle?: string;
   }) {
     return this.prisma.diaryEntry.create({ data });
+  }
+
+  // 사용자 조회 (영상 변환 쿼터 확인용)
+  async findUserById(userId: number) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        plan: true,
+        videoConversionRemaining: true,
+      },
+    });
+  }
+
+  // 영상 변환 잔여 횟수 차감
+  async decrementVideoConversion(userId: number) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        videoConversionRemaining: { decrement: 1 },
+      },
+    });
   }
 
   // 일기 삭제 (soft delete)

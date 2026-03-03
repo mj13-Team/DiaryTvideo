@@ -14,16 +14,74 @@ import {
 import {
   PlanType as PrismaPlanType,
   SubscriptionStatus as PrismaSubscriptionStatus,
-  BillingCycle as PrismaBillingCycle,
 } from "@prisma/client";
 
 @Injectable()
 export class SubscriptionService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * 구독 만료 여부를 체크하고 만료됐으면 자동으로 FREE로 다운그레이드
+   * 크론잡 대신 요청 시점에 lazily 처리
+   */
+  async checkAndExpireIfNeeded(userId: number): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        plan: true,
+        subscriptionStatus: true,
+        subscriptionEndDate: true,
+        videoConversionResetDate: true,
+      },
+    });
+
+    if (!user) return;
+
+    const now = new Date();
+    const isExpirable =
+      user.subscriptionStatus === PrismaSubscriptionStatus.ACTIVE ||
+      user.subscriptionStatus === PrismaSubscriptionStatus.CANCELLED;
+
+    // 구독 만료 처리 (우선순위 높음)
+    if (
+      isExpirable &&
+      user.subscriptionEndDate &&
+      user.subscriptionEndDate < now
+    ) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          plan: PrismaPlanType.FREE,
+          subscriptionStatus: PrismaSubscriptionStatus.EXPIRED,
+          videoConversionRemaining: 0,
+        },
+      });
+      return;
+    }
+
+    // 월별 쿼터 리셋 (PRO 유저 && 리셋 날짜 경과 시)
+    if (
+      user.plan === PrismaPlanType.PRO &&
+      user.videoConversionResetDate &&
+      user.videoConversionResetDate < now
+    ) {
+      const nextResetDate = new Date(now);
+      nextResetDate.setMonth(nextResetDate.getMonth() + 1);
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          videoConversionRemaining: 40,
+          videoConversionResetDate: nextResetDate,
+        },
+      });
+    }
+  }
+
   async getCurrentSubscription(
     userId: number,
   ): Promise<ApiResponse<SubscriptionResponse>> {
+    await this.checkAndExpireIfNeeded(userId);
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -56,6 +114,8 @@ export class SubscriptionService {
   }
 
   async getUsage(userId: number): Promise<ApiResponse<UsageResponse>> {
+    await this.checkAndExpireIfNeeded(userId);
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -83,6 +143,8 @@ export class SubscriptionService {
   async cancelSubscription(
     userId: number,
   ): Promise<ApiResponse<CancelSubscriptionResponse>> {
+    await this.checkAndExpireIfNeeded(userId);
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -127,13 +189,13 @@ export class SubscriptionService {
   async activateSubscription(
     userId: number,
     planType: PrismaPlanType,
-    billingCycle: PrismaBillingCycle,
+    billingCycle: string,
   ) {
     const now = new Date();
     const endDate = new Date(now);
 
     // 구독 종료일 계산
-    if (billingCycle === PrismaBillingCycle.MONTHLY) {
+    if (billingCycle === "MONTHLY") {
       endDate.setMonth(endDate.getMonth() + 1);
     } else {
       endDate.setFullYear(endDate.getFullYear() + 1);
@@ -143,7 +205,6 @@ export class SubscriptionService {
     const resetDate = new Date(now);
     resetDate.setMonth(resetDate.getMonth() + 1);
 
-    // User 업데이트
     await this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -157,32 +218,6 @@ export class SubscriptionService {
       },
     });
 
-    // Subscription 레코드 생성
-    await this.prisma.subscription.create({
-      data: {
-        userId,
-        planType,
-        billingCycle,
-        startDate: now,
-        endDate: endDate,
-        nextBillingDate: endDate,
-        status: PrismaSubscriptionStatus.ACTIVE,
-        price: billingCycle === PrismaBillingCycle.MONTHLY ? 20 : 200,
-        currency: "USD",
-      },
-    });
-
     return { success: true };
-  }
-
-  async deactivateSubscription(userId: number) {
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        plan: PrismaPlanType.FREE,
-        subscriptionStatus: PrismaSubscriptionStatus.EXPIRED,
-        videoConversionRemaining: 0,
-      },
-    });
   }
 }

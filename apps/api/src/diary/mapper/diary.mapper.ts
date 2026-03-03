@@ -13,6 +13,7 @@ export const toDiaryData = (diary: DiaryEntry): DiaryData => ({
   createdAt: diary.createdAt,
   updatedAt: diary.updatedAt,
   deletedAt: diary.deletedAt,
+  videoConversionEnabled: diary.videoConversionEnabled,
   videoStatus: diary.videoStatus,
   videoError: diary.videoError,
   videoRetryCount: diary.videoRetryCount,

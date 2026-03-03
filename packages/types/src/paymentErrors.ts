@@ -27,6 +27,10 @@ export const PaymentErrors = {
     en: "Payment gateway is not properly configured",
     ko: "결제 게이트웨이 설정이 올바르지 않습니다",
   }),
+  SUBSCRIPTION_ALREADY_ACTIVE: i18nMessage({
+    en: "You already have an active subscription",
+    ko: "이미 활성 구독이 있습니다",
+  }),
 } as const;
 
 export const PaymentErrorCodes = Object.keys(PaymentErrors).reduce(

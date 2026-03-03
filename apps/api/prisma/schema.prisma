@@ -47,8 +47,7 @@ model User {
   videoConversionResetDate DateTime?
 
   // ─── 관계 ───
-  subscriptions Subscription[]
-  payments      Payment[]
+  payments Payment[]
 
   @@index([email])
   @@index([refreshToken])
@@ -90,7 +89,7 @@ model DiaryEntry {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // ─── 영상 변환 설정 ───
-  videoConversionEnabled Boolean @default(true)
+  videoConversionEnabled Boolean @default(false)
   customStyle            String? @db.Text
 
   @@index([videoStatus])
@@ -98,33 +97,6 @@ model DiaryEntry {
   @@index([createdAt])
   @@index([userId, localDate])
   @@map("diary_entries")
-}
-
-model Subscription {
-  id     String @id @default(uuid())
-  userId Int
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  planType     PlanType
-  billingCycle BillingCycle
-
-  startDate       DateTime
-  endDate         DateTime
-  nextBillingDate DateTime?
-
-  status      SubscriptionStatus
-  cancelledAt DateTime?
-
-  price    Float
-  currency String @default("USD")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId, status])
-  @@index([endDate])
-  @@index([nextBillingDate])
-  @@map("subscriptions")
 }
 
 model Payment {
@@ -136,7 +108,7 @@ model Payment {
   portonePaymentId String @unique
 
   amount   Float
-  currency String @default("USD")
+  currency String @default("KRW")
 
   planType     PlanType
   billingCycle BillingCycle
