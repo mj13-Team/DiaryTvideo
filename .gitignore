@@ -42,7 +42,6 @@ next-env.d.ts
 
 # README files or Markdown files
 README.md
-*.md
 
 # monorepo
 .turbo

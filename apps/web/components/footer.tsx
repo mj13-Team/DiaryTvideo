@@ -12,7 +12,9 @@ export function Footer() {
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
           <div className="text-center text-sm text-muted-foreground md:text-left">
-            <p>© 2026 My Diary. {t.allRightsReserved}</p>
+            <p>
+              © 2026 {t.project_name}. {t.allRightsReserved}
+            </p>
           </div>
 
           <div className="text-center text-sm text-muted-foreground md:text-right">
