@@ -15,12 +15,14 @@ import {
 import { VideoProducer } from "src/video/video.producer";
 import { toDiaryData } from "./mapper/diary.mapper";
 import { VideoStatus } from "@prisma/client";
+import { SubscriptionService } from "src/subscription/subscription.service";
 
 @Injectable()
 export class DiaryService {
   constructor(
     private readonly diaryRepository: DiaryRepository,
     private readonly videoProducer: VideoProducer,
+    private readonly subscriptionService: SubscriptionService,
   ) {}
 
   // 일기 목록 조회
@@ -51,22 +53,43 @@ export class DiaryService {
     userId: number,
     data: CreateDiaryRequest,
   ): Promise<ApiResponse<DiaryData>> {
-    const diary = await this.diaryRepository.create({ userId, ...data });
+    const shouldGenerateVideo = data.enableVideo !== false;
 
-    try {
-      // 2. 비디오 생성 작업 큐에 등록 (비동기, non-blocking)
-      await this.videoProducer.addVideoGenerationJob({
-        diaryId: diary.id,
-        userId,
-        title: data.title,
-        content: data.content,
-      });
-    } catch {
-      await this.diaryRepository.updateVideoStatus(
-        diary.id,
-        VideoStatus.FAILED,
-        VideoStatusMessages.FAILED_START,
-      );
+    // 영상 변환 요청 시 쿼터 확인 (만료/월별 리셋 먼저 처리)
+    if (shouldGenerateVideo) {
+      await this.subscriptionService.checkAndExpireIfNeeded(userId);
+      const user = await this.diaryRepository.findUserById(userId);
+      if (user && user.videoConversionRemaining <= 0) {
+        throw new BadRequestException(DiaryErrors.DIARY_VIDEO_QUOTA_EXCEEDED);
+      }
+    }
+
+    const diary = await this.diaryRepository.create({
+      userId,
+      title: data.title,
+      content: data.content,
+      localDate: data.localDate,
+      videoConversionEnabled: shouldGenerateVideo,
+      customStyle: data.videoStyle,
+    });
+
+    if (shouldGenerateVideo) {
+      try {
+        await this.videoProducer.addVideoGenerationJob({
+          diaryId: diary.id,
+          userId,
+          title: data.title,
+          content: data.content,
+        });
+        // 영상 큐 등록 성공 시 쿼터 차감
+        await this.diaryRepository.decrementVideoConversion(userId);
+      } catch {
+        await this.diaryRepository.updateVideoStatus(
+          diary.id,
+          VideoStatus.FAILED,
+          VideoStatusMessages.FAILED_START,
+        );
+      }
     }
 
     return { success: true, data: toDiaryData(diary) };

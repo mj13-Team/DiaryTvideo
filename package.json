@@ -8,9 +8,12 @@
     "format:check": "prettier --check .",
     "type-check": "turbo run type-check",
     "test": "turbo run test",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
     "prepare": "husky"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.8",
     "husky": "^9.1.7",
     "prettier": "^3.7.4",
     "turbo": "^2.7.3"

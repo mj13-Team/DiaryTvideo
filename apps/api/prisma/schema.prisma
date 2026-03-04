@@ -10,66 +10,87 @@ datasource db {
 }
 
 model User {
-  id            Int       @id @default(autoincrement())
-  email         String    @unique
-  name          String
-  passwordHash  String    @map("password_hash")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-  deletedAt     DateTime? @map("deleted_at")
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  name         String
+  passwordHash String    @map("password_hash")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
 
-  refreshToken           String?   @map("refresh_token")
-  refreshTokenExpiresAt  DateTime? @map("refresh_token_expires_at")
+  refreshToken          String?   @map("refresh_token")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
 
-  emailVerified Boolean            @default(false) @map("email_verified")
-  emailVerificationToken           String?   @map("email_verification_token")
-  emailVerificationTokenExpiresAt  DateTime? @map("email_verification_token_expires_at")
+  emailVerified                   Boolean   @default(false) @map("email_verified")
+  emailVerificationToken          String?   @map("email_verification_token")
+  emailVerificationTokenExpiresAt DateTime? @map("email_verification_token_expires_at")
 
   failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
   lastFailedLoginAt   DateTime? @map("last_failed_login_at")
   accountLockedUntil  DateTime? @map("account_locked_until")
   lastSuccessfulLogin DateTime? @map("last_successful_login")
 
-  passwordResetToken           String?   @map("password_reset_token")
-  passwordResetTokenExpiresAt  DateTime? @map("password_reset_token_expires_at")
+  passwordResetToken          String?   @map("password_reset_token")
+  passwordResetTokenExpiresAt DateTime? @map("password_reset_token_expires_at")
 
-  diaryEntries         DiaryEntry[]
+  diaryEntries DiaryEntry[]
+
+  // ─── 플랜 및 구독 상태 ───
+  plan                    PlanType           @default(FREE)
+  subscriptionStatus      SubscriptionStatus @default(INACTIVE)
+  subscriptionStartDate   DateTime?
+  subscriptionEndDate     DateTime?
+  subscriptionCancelledAt DateTime?
+
+  // ─── 영상 변환 사용량 관리 ───
+  videoConversionRemaining Int       @default(0)
+  videoConversionResetDate DateTime?
+
+  // ─── 관계 ───
+  payments Payment[]
 
   @@index([email])
   @@index([refreshToken])
   @@index([emailVerificationToken])
   @@index([passwordResetToken])
+  @@index([plan])
+  @@index([subscriptionStatus])
+  @@index([subscriptionEndDate])
   @@map("users")
 }
 
 model DiaryEntry {
-  id           String    @id @default(uuid())
-  userId       Int       @map("user_id")
-  title        String
-  content      String    @db.Text
+  id      String @id @default(uuid())
+  userId  Int    @map("user_id")
+  title   String
+  content String @db.Text
 
   // 사용자가 일기를 작성한 날짜 (로컬 시간대 기준, YYYY-MM-DD 형식)
   // 예: 사용자가 KST 2026-01-27 23:30에 작성했다면 "2026-01-27"
   // 시간대 차이로 인한 날짜 불일치를 방지하기 위해 사용자의 로컬 날짜를 문자열로 저장
-  localDate    String    @map("local_date")
+  localDate String @map("local_date")
 
-  videoUrl     String?   @map("video_url")
-  thumbnailUrl String?   @map("thumbnail_url")
-  subtitleUrl  String?   @map("subtitle_url")
+  videoUrl     String? @map("video_url")
+  thumbnailUrl String? @map("thumbnail_url")
+  subtitleUrl  String? @map("subtitle_url")
 
   // 일기가 생성된 정확한 시각 (UTC 기준 타임스탬프)
   // 예: KST 2026-01-27 23:30 = UTC 2026-01-27 14:30
-  createdAt    DateTime  @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
   // 일기가 수정된 시각 (UTC 기준 타임스탬프, 자동 업데이트)
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  deletedAt    DateTime? @map("deleted_at")
-  videoStatus  VideoStatus  @default(PENDING) @map("video_status")
-  videoError   String?      @map("video_error") @db.Text
-  videoRetryCount Int @default(0) @map("video_retry_count")
+  deletedAt       DateTime?   @map("deleted_at")
+  videoStatus     VideoStatus @default(PENDING) @map("video_status")
+  videoError      String?     @map("video_error") @db.Text
+  videoRetryCount Int         @default(0) @map("video_retry_count")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // ─── 영상 변환 설정 ───
+  videoConversionEnabled Boolean @default(false)
+  customStyle            String? @db.Text
 
   @@index([videoStatus])
   @@index([userId])
@@ -78,9 +99,67 @@ model DiaryEntry {
   @@map("diary_entries")
 }
 
+model Payment {
+  id     String @id @default(uuid())
+  userId Int
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // PortOne 결제 정보
+  portonePaymentId String @unique
+
+  amount   Float
+  currency String @default("KRW")
+
+  planType     PlanType
+  billingCycle BillingCycle
+
+  status        PaymentStatus
+  paidAt        DateTime?
+  failedAt      DateTime?
+  failureReason String?       @db.Text
+
+  // 카드 정보 (마스킹)
+  paymentMethod String? // card, etc
+  cardBrand     String? // visa, mastercard, amex
+  cardLast4     String? // 마지막 4자리
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@index([portonePaymentId])
+  @@map("payments")
+}
+
 enum VideoStatus {
   PENDING
   PROCESSING
   COMPLETED
   FAILED
+}
+
+enum PlanType {
+  FREE
+  PRO
+}
+
+enum SubscriptionStatus {
+  INACTIVE // 구독 안 함
+  ACTIVE // 구독 활성
+  CANCELLED // 해지 예약 (기간 만료까지 유지)
+  EXPIRED // 만료됨
+}
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
 }
