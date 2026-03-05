@@ -146,6 +146,13 @@ export const translations: { [key in Language]: { [key: string]: string } } = {
     developedBy: COOMON_TRANSLATIONS.developedBy,
     poweredBy: COOMON_TRANSLATIONS.poweredBy,
     contact: COOMON_TRANSLATIONS.contact,
+    businessInfoTitle: "Business Information",
+    companyNameLabel: "Company",
+    businessNumberLabel: "Business Reg. No.",
+    addressLabel: "Address",
+    representativeLabel: "CEO",
+    ecommerceNumberLabel: "E-commerce License",
+    simpleTaxpayer: "Simple Taxpayer",
 
     // Pricing Page
     pricing: "Pricing",
@@ -371,6 +378,13 @@ export const translations: { [key in Language]: { [key: string]: string } } = {
     developedBy: COOMON_TRANSLATIONS.developedBy,
     poweredBy: COOMON_TRANSLATIONS.poweredBy,
     contact: COOMON_TRANSLATIONS.contact,
+    businessInfoTitle: "사업자 정보",
+    companyNameLabel: "상호명",
+    businessNumberLabel: "사업자등록번호",
+    addressLabel: "사업장주소",
+    representativeLabel: "대표자명",
+    ecommerceNumberLabel: "통신판매신고번호",
+    simpleTaxpayer: "간이과세자",
 
     // Pricing Page
     pricing: "요금제",
