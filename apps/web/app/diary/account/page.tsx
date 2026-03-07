@@ -27,8 +27,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { LanguageToggle, useLanguage } from "@/components/language-toggle";
+import { useLanguage } from "@/components/language-toggle";
 import { translations } from "@/lib/translations";
 import {
   getMe,
@@ -382,19 +381,13 @@ export default function AccountPage() {
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
-        <header className="mb-8 flex items-center justify-between">
-          <Link
-            href="/diary"
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-            <span>{t.backToDiary}</span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <LanguageToggle />
-            <ThemeToggle />
-          </div>
-        </header>
+        <Link
+          href="/diary"
+          className="mb-8 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors w-fit"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          <span>{t.backToDiary}</span>
+        </Link>
 
         <h1 className="font-serif text-3xl font-bold text-foreground mb-8">
           {t.accountSettings}

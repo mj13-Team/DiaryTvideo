@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { AuthProvider } from "@/components/auth-provider";
 import { LanguageProvider } from "@/components/language-toggle";
 import { ThemeProvider } from "@/components/theme-toggle";
+import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import "./globals.css";
 
@@ -42,6 +43,7 @@ export default function RootLayout({
           <LanguageProvider>
             <div className="flex min-h-screen flex-col">
               <AuthProvider>
+                <Header />
                 <div className="flex-1">{children}</div>
                 <Footer />
               </AuthProvider>

@@ -4,12 +4,12 @@ import { useLanguage } from "@/components/language-toggle";
 import { translations } from "@/lib/translations";
 
 const BUSINESS_INFO = {
-  companyName: "회사명을 입력하세요",
-  businessNumber: "000-00-00000",
+  companyName: "엠제이13(MJ13)",
+  businessNumber: "535-46-01309",
   contact: "contact@diarytvideo.com",
-  address: "사업장 주소를 입력하세요",
-  representative: "대표자명을 입력하세요",
-  ecommerceNumber: "제0000-서울-0000호",
+  address: "대구광역시 서구 중리동 1099-13",
+  representative: "김민재",
+  ecommerceNumber: "2026-대구서구-0117",
   isSimpleTaxpayer: false,
 };
 
