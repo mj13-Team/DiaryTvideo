@@ -13,6 +13,7 @@ import {
   deleteEntry,
   retryVideoGeneration,
 } from "@/lib/diary-store";
+import { getUsage } from "@/lib/subscription-store";
 import { useVideoStatusUpdates } from "@/lib/socket";
 import { DiaryData, Language } from "@repo/types";
 import { ApiError } from "@/lib/api";
@@ -38,8 +39,21 @@ export function DiaryList({ language = "en" }: { language?: Language }) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<string | null>(null);
   const [seenJobIds, setSeenJobIds] = useState<Set<string>>(new Set());
+  // FREE 플랜 + 잔여 0일 때만 비디오 UI 완전 숨김 (PRO→FREE 전환 후 잔여 있으면 표시 유지)
+  const [hideVideoUI, setHideVideoUI] = useState(false);
 
   const t = translations[language];
+
+  useEffect(() => {
+    getUsage().then((res) => {
+      if (res.success && res.data) {
+        console.log(res.data.videoConversionRemaining);
+        setHideVideoUI(
+          res.data.plan === "FREE" && res.data.videoConversionRemaining === 0,
+        );
+      }
+    });
+  }, []);
 
   // 실시간 비디오 상태 업데이트 구독
   useVideoStatusUpdates(setEntries);
@@ -182,7 +196,9 @@ export function DiaryList({ language = "en" }: { language?: Language }) {
     return entries
       .filter(
         (entry) =>
-          entry.videoStatus === "PENDING" || entry.videoStatus === "PROCESSING",
+          entry.videoConversionEnabled &&
+          (entry.videoStatus === "PENDING" ||
+            entry.videoStatus === "PROCESSING"),
       )
       .map((entry) => entry.id);
   }, [entries]);
@@ -225,8 +241,10 @@ export function DiaryList({ language = "en" }: { language?: Language }) {
   }, []);
 
   const filteredEntries = useMemo(() => {
-    // API에서 이미 날짜별로 필터링된 데이터가 오므로 검색어만 필터링
     return entries.filter((entry) => {
+      // AI 비디오 탭에서는 videoConversionEnabled가 true인 항목만 표시
+      if (view === "video" && !entry.videoConversionEnabled) return false;
+
       const matchesSearch =
         searchQuery === "" ||
         entry.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -234,7 +252,7 @@ export function DiaryList({ language = "en" }: { language?: Language }) {
 
       return matchesSearch;
     });
-  }, [entries, searchQuery]);
+  }, [entries, searchQuery, view]);
 
   if (isLoading) {
     return (
@@ -367,7 +385,7 @@ export function DiaryList({ language = "en" }: { language?: Language }) {
                 view={view}
                 onViewChange={handleViewChange}
                 language={language}
-                hasNewJob={hasUnseenJob}
+                hasNewJob={hideVideoUI ? false : hasUnseenJob}
               />
             </div>
           </div>

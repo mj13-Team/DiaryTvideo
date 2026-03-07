@@ -8,6 +8,8 @@ const PRODUCTION_REQUIRED_KEYS = [
   "AWS_ACCESS_KEY_ID",
   "AWS_SECRET_ACCESS_KEY",
   "AWS_S3_BUCKET",
+  "PORTONE_API_SECRET",
+  "PORTONE_WEBHOOK_SECRET",
 ] as const;
 
 export const envSchema = z
@@ -43,6 +45,18 @@ export const envSchema = z
     AWS_ACCESS_KEY_ID: z.string().optional(),
     AWS_SECRET_ACCESS_KEY: z.string().optional(),
     AWS_S3_BUCKET: z.string().optional(),
+
+    // PortOne Payment Gateway
+    PORTONE_API_SECRET: z.string().optional(),
+    PORTONE_WEBHOOK_SECRET: z.string().optional(),
+
+    // Payment Plan Prices
+    PLAN_PRO_MONTHLY_PRICE: z.string().default("29000"),
+    PLAN_PRO_YEARLY_PRICE: z.string().default("290000"),
+    PAYMENT_CURRENCY: z.string().default("KRW"),
+
+    // Feature Flags
+    PAYMENT_ENABLED: z.enum(["true", "false"]).default("true"),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV === "production") {

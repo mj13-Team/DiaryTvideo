@@ -9,6 +9,8 @@ import { UserModule } from "./user/user.module";
 import { DiaryModule } from "./diary/diary.module";
 import { VideoModule } from "./video/video.module";
 import { StorageModule } from "./storage/storage.module";
+import { PaymentModule } from "./payment/payment.module";
+import { SubscriptionModule } from "./subscription/subscription.module";
 
 @Module({
   imports: [
@@ -25,6 +27,8 @@ import { StorageModule } from "./storage/storage.module";
     DiaryModule,
     VideoModule,
     StorageModule,
+    PaymentModule,
+    SubscriptionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

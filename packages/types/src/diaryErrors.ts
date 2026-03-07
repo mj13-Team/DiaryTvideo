@@ -39,6 +39,10 @@ export const DiaryErrors = {
     en: "Content must be 5000 characters or less",
     ko: "내용은 5000자 이하로 입력해 주세요.",
   }),
+  DIARY_VIDEO_QUOTA_EXCEEDED: i18nMessage({
+    en: "Video conversion quota exceeded. Please upgrade your plan.",
+    ko: "영상 변환 횟수를 초과했습니다. 플랜을 업그레이드해 주세요.",
+  }),
 } as const;
 
 export const DiaryErrorCodes = Object.keys(DiaryErrors).reduce(
