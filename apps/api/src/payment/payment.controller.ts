@@ -13,6 +13,7 @@ import {
 import { Request } from "express";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
+import { PaymentEnabledGuard } from "./payment-enabled.guard";
 import { PaymentService } from "./payment.service";
 import { PortOneService } from "./portone.service";
 import {
@@ -38,7 +39,7 @@ export class PaymentController {
   }
 
   @Post("prepare")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(PaymentEnabledGuard, JwtAuthGuard)
   async preparePayment(
     @CurrentUser() user: JwtAccessPayload,
     @Body(new ZodValidationPipe(PreparePaymentRequestSchema))
@@ -52,7 +53,7 @@ export class PaymentController {
   }
 
   @Post("cancel")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(PaymentEnabledGuard, JwtAuthGuard)
   async cancelPayment(
     @CurrentUser() user: JwtAccessPayload,
     @Body(new ZodValidationPipe(CompletePaymentRequestSchema))
@@ -62,7 +63,7 @@ export class PaymentController {
   }
 
   @Post("complete")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(PaymentEnabledGuard, JwtAuthGuard)
   async completePayment(
     @CurrentUser() user: JwtAccessPayload,
     @Body(new ZodValidationPipe(CompletePaymentRequestSchema))

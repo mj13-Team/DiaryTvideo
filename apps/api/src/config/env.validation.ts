@@ -54,6 +54,9 @@ export const envSchema = z
     PLAN_PRO_MONTHLY_PRICE: z.string().default("29000"),
     PLAN_PRO_YEARLY_PRICE: z.string().default("290000"),
     PAYMENT_CURRENCY: z.string().default("KRW"),
+
+    // Feature Flags
+    PAYMENT_ENABLED: z.enum(["true", "false"]).default("true"),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV === "production") {

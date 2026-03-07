@@ -45,6 +45,7 @@ export default () => {
       s3Bucket: env.AWS_S3_BUCKET,
     },
     payment: {
+      enabled: env.PAYMENT_ENABLED === "true",
       proMonthlyPrice: parseInt(env.PLAN_PRO_MONTHLY_PRICE, 10),
       proYearlyPrice: parseInt(env.PLAN_PRO_YEARLY_PRICE, 10),
       currency: env.PAYMENT_CURRENCY,
