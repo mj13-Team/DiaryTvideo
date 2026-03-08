@@ -113,6 +113,11 @@ export default function PricingPage() {
           typeof PortOne.requestPayment
         >[0]["currency"],
         payMethod: "CARD",
+        customer: {
+          fullName: user.name,
+          email: user.email,
+          phoneNumber: "01000000000",
+        },
       });
 
       if (paymentRes?.code != null) {
