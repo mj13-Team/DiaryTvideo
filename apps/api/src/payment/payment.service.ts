@@ -65,7 +65,7 @@ export class PaymentService {
     }
 
     const amount = this.getAmount(planType, billingCycle);
-    const paymentId = `payment-${randomUUID()}`;
+    const paymentId = `payment-${randomUUID().replace(/-/g, "")}`;
     const orderName =
       billingCycle === "MONTHLY"
         ? "DiaryTvideo Pro Monthly"
