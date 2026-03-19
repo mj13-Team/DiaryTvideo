@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -63,19 +64,13 @@ export default function PricingPage() {
     ((monthlyPrice * 12 - yearlyPrice) / (monthlyPrice * 12)) * 100,
   );
 
-  const freePlanFeatures = [
-    t.featureDiaryEntries,
-    t.featureTextView,
-    t.featureCloudBackup,
-  ];
+  const freePlanFeatures = [t.featureDiaryEntries, t.featureTextView];
 
   const proPlanFeatures = [
     t.featureDiaryEntries,
     t.featureTextView,
     t.featureVideosPerMonth.replace("{count}", "40"),
     t.featurePriorityProcessing,
-    t.featureCloudBackup,
-    t.featureExportData,
   ];
 
   const faqs = [
@@ -287,6 +282,23 @@ export default function PricingPage() {
               </ul>
             </CardContent>
           </Card>
+        </div>
+      </section>
+
+      {/* Payment Notice */}
+      <section className="mx-auto max-w-5xl px-4 pb-12 sm:px-6 lg:px-8">
+        <div className="rounded-lg border border-border bg-secondary/30 px-6 py-5 text-sm text-muted-foreground space-y-1.5">
+          <p>{t.pricingNoticeServiceDesc}</p>
+          <p>{t.pricingNoticePayment}</p>
+          <p>
+            {t.pricingNoticeRefund}{" "}
+            <Link
+              href="/refund"
+              className="text-foreground underline underline-offset-4 hover:text-primary transition-colors"
+            >
+              {t.pricingNoticeRefundLink}
+            </Link>
+          </p>
         </div>
       </section>
 
