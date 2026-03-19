@@ -242,6 +242,42 @@ export const translations: { [key in Language]: { [key: string]: string } } = {
     videoStatusProcessingSubtitle: "We'll let you know when it's done",
     videoStatusFailedTitle: "Video generation failed",
     videoStatusRetry: "Retry",
+
+    // Refund Policy
+    refundPolicyTitle: "Refund & Cancellation Policy",
+    refundPolicyIntro:
+      "Due to the nature of digital content (video generation service), the following refund policy applies.",
+    refundSection1Title: "1. Payment & Service Provision",
+    refundSection1Item1: "This service is a one-time payment product.",
+    refundSection1Item2:
+      "The service is available for 30 days from the time of payment.",
+    refundSection2Title: "2. Refund Eligibility",
+    refundSection2Item1:
+      "A full refund is available within 7 days of payment if the service has not been used.",
+    refundSection3Title: "3. Non-Refundable Conditions",
+    refundSection3Item1:
+      "If the service has been used (e.g., video generation) after payment",
+    refundSection3Item2: "If 7 days have passed since the payment date",
+    refundSection3Item3: "If the usage period (30 days) has ended",
+    refundSection4Title: "4. Partial Refund",
+    refundSection4Item1:
+      "Partial refunds are not available due to the nature of the service.",
+    refundSection5Title: "5. How to Request a Refund",
+    refundSection5Item1:
+      "Submit a refund request via customer support or email",
+    refundSection5Item2:
+      "Requests are processed within 3–5 business days after submission.",
+    refundSection6Title: "6. Other",
+    refundSection6Item1:
+      "Refund processing time may vary depending on the payment method.",
+    refundPolicyLink: "Refund Policy",
+    pricingNoticeServiceDesc:
+      "This is an AI-based video production service. Users can access AI video generation features for a set period through payment.",
+    pricingNoticePayment:
+      "This is a one-time payment product. Access is valid for 30 days after payment.",
+    pricingNoticeRefund:
+      "Full refund available within 7 days of payment if the service has not been used.",
+    pricingNoticeRefundLink: "See refund policy for details.",
   },
   ko: {
     // Navigation
@@ -472,5 +508,36 @@ export const translations: { [key in Language]: { [key: string]: string } } = {
     videoStatusProcessingSubtitle: "완료되면 알려드릴게요",
     videoStatusFailedTitle: "영상 생성에 실패했습니다",
     videoStatusRetry: "다시 시도",
+
+    // Refund Policy
+    refundPolicyTitle: "환불 및 취소 정책",
+    refundPolicyIntro:
+      "본 서비스는 디지털 콘텐츠(영상 생성 서비스) 특성상 아래와 같은 환불 정책을 적용합니다.",
+    refundSection1Title: "1. 결제 및 서비스 제공",
+    refundSection1Item1: "본 서비스는 단건 결제 상품입니다.",
+    refundSection1Item2: "결제 완료 시점부터 30일간 서비스 이용이 가능합니다.",
+    refundSection2Title: "2. 환불 가능 조건",
+    refundSection2Item1:
+      "결제 후 7일 이내이며, 서비스 이용 이력이 없는 경우 전액 환불 가능합니다.",
+    refundSection3Title: "3. 환불 불가 조건",
+    refundSection3Item1: "결제 후 서비스 이용(영상 생성 등)이 발생한 경우",
+    refundSection3Item2: "결제일로부터 7일이 경과한 경우",
+    refundSection3Item3: "이용 기간(30일)이 종료된 경우",
+    refundSection4Title: "4. 부분 환불",
+    refundSection4Item1: "서비스 특성상 부분 환불은 제공되지 않습니다.",
+    refundSection5Title: "5. 환불 신청 방법",
+    refundSection5Item1: "고객센터 또는 이메일을 통해 환불 요청 접수",
+    refundSection5Item2: "접수 후 영업일 기준 3~5일 이내 처리됩니다.",
+    refundSection6Title: "6. 기타",
+    refundSection6Item1:
+      "결제 수단에 따라 환불 처리 기간이 달라질 수 있습니다.",
+    refundPolicyLink: "환불 정책",
+    pricingNoticeServiceDesc:
+      "본 서비스는 AI 기반 영상 제작 서비스로, 사용자는 결제를 통해 일정 기간 동안 AI 영상 생성 기능을 이용할 수 있습니다.",
+    pricingNoticePayment:
+      "본 상품은 단건 결제 상품으로, 결제 완료 후 30일간 이용 가능합니다.",
+    pricingNoticeRefund:
+      "결제 후 7일 이내, 서비스 미이용 시 전액 환불이 가능합니다.",
+    pricingNoticeRefundLink: "자세한 내용은 환불 정책을 확인해주세요.",
   },
 } as const;

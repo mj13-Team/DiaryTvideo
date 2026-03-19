@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useLanguage } from "@/components/language-toggle";
 import { translations } from "@/lib/translations";
 
@@ -29,6 +30,14 @@ export function Footer() {
 
           <div className="text-center text-sm text-muted-foreground md:text-right">
             <p>
+              <Link
+                href="/refund"
+                className="text-muted-foreground underline-offset-4 hover:underline"
+              >
+                {t.refundPolicyLink}
+              </Link>
+            </p>
+            <p className="mt-1">
               {t.developedBy} v0 Team • {t.contact}:{" "}
               <a
                 href="mailto:contact@diarytvideo.com"
