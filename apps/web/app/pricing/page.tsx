@@ -71,6 +71,7 @@ export default function PricingPage() {
     t.featureTextView,
     t.featureVideosPerMonth.replace("{count}", "40"),
     t.featurePriorityProcessing,
+    ...(isYearly ? [t.featureServicePeriodYear] : []),
   ];
 
   const faqs = [

@@ -14,6 +14,8 @@ const BUSINESS_INFO = {
   isSimpleTaxpayer: false,
 };
 
+const CONTACT_PHONE = process.env.NEXT_PUBLIC_CONTACT_PHONE;
+
 export function Footer() {
   const { language } = useLanguage();
   const t = translations[language];
@@ -37,6 +39,17 @@ export function Footer() {
                 {t.refundPolicyLink}
               </Link>
             </p>
+            {CONTACT_PHONE && (
+              <p className="mt-1">
+                {t.phoneLabel}:{" "}
+                <a
+                  href={`tel:${CONTACT_PHONE}`}
+                  className="text-foreground underline-offset-4 hover:underline"
+                >
+                  {CONTACT_PHONE}
+                </a>
+              </p>
+            )}
             <p className="mt-1">
               {t.developedBy} v0 Team • {t.contact}:{" "}
               <a
