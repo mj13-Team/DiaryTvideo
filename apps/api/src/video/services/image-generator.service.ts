@@ -62,7 +62,7 @@ export class ImageGeneratorService {
     const client = this.openaiService.getClient();
     const response = await client.images.generate({
       model: "dall-e-3",
-      prompt: `Scene: ${scene.visual}. Style: cinematic, warm lighting, soft anime-inspired illustration.`,
+      prompt: `Scene: ${scene.visual}. Style: cinematic still life, warm lighting, atmospheric, no people, no faces, no human figures, objects and environment only.`,
       n: 1,
       size: "1792x1024",
       quality: "standard",

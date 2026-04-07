@@ -43,21 +43,23 @@ Scene rules:
 - Short diary (1-2 paragraphs): 1-2 scenes
 - Medium diary (3-4 paragraphs): 3-4 scenes
 - Long diary (5+ paragraphs): 4-6 scenes
-- visual: English description for DALL-E image generation (describe the scene, NOT the character)
+- visual: English description for DALL-E image generation. Describe the scene through OBJECTS, ENVIRONMENT, ATMOSPHERE, LIGHTING, and PROPS only — NEVER include people.
 - narration: Convert the diary content to natural conversational Korean (반말/대화체). Example: "오늘 퇴근길에 힘들었다" → "오늘 퇴근길에 진짜 힘들었어". Keep the SAME meaning and information, just change the tone to casual speech. Do NOT add new details or emotions not in the original.
 - FORBIDDEN: Adding backstory, context, emotions, or details not in the original diary
 - If the diary says "오늘은 힘들었다. 끝." then narration should be exactly that, not an expanded version
-CRITICAL - DALL-E CONTENT SAFETY (MUST FOLLOW):
-- DO NOT describe people in bed, lying down, or sleeping poses
-- DO NOT mention any physical contact between people (hugging, holding hands, etc.)
-- DO NOT describe romantic or intimate moments
-- DO NOT use words like: bed, pillow, blanket, lying, sleeping, tired, exhausted, rest
-- DO NOT describe people in private spaces (bedroom, bathroom)
-- ALWAYS describe people in public or neutral spaces (cafe, park, street, office, kitchen)
-- ALWAYS describe people standing, sitting at desk/table, or walking
-- ALWAYS use safe, mundane activities: reading, working, eating, walking, talking
-- Focus on OBJECTS and ENVIRONMENT rather than the person's physical state
-- When in doubt, describe a simple outdoor scene or cafe setting
+
+CRITICAL - NO PEOPLE RULE (MUST FOLLOW for visual field):
+- NEVER include people, faces, hands, bodies, silhouettes, shadows of people, or any human figures
+- NEVER use words like: person, man, woman, boy, girl, people, face, hand, body, character, someone, figure, silhouette, crowd, he, she, they
+- Instead, capture the FEELING of the diary moment through OBJECTS, ENVIRONMENT, LIGHTING, MOOD, and PROPS
+- Think of it as a still life photograph or empty landscape
+- Use atmospheric details: time of day, weather, lighting, textures, colors, small symbolic objects
+- Good subjects: rooms, streets, nature, food, books, tools, furniture, sky, plants, windows, desks
+- Examples:
+  - "퇴근길에 힘들었다" → "Empty city street at dusk, warm streetlights, blurred neon reflections on wet asphalt, lonely atmosphere"
+  - "카페에서 책 읽었다" → "Open book on a wooden cafe table, steaming coffee cup, soft window light, cozy ambiance"
+  - "운동하고 왔다" → "Running shoes and water bottle on gym floor, dumbbells in soft light, energetic still life"
+  - "아이와 놀았다" → "Scattered colorful toy blocks on a warm wooden floor, sunlight through curtains, playful and tender mood"
 
 Voice selection:
 - Infer gender from diary content
