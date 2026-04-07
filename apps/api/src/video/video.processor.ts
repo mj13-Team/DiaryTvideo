@@ -54,8 +54,10 @@ export class VideoProcessor extends WorkerHost {
         message: VideoStatusMessages.SCENE_ANALYSIS,
       });
 
-      const { character, voice, scenes } =
-        await this.sceneSplitter.splitIntoScenes(title, content);
+      const { voice, scenes } = await this.sceneSplitter.splitIntoScenes(
+        title,
+        content,
+      );
 
       // TTS + 이미지 생성 (병렬 실행)
       failedMessage = VideoStatusMessages.FAILED_AT_AUDIO_IMAGE;
@@ -67,7 +69,7 @@ export class VideoProcessor extends WorkerHost {
 
       const [audios, images] = await Promise.all([
         this.ttsService.generateAudio(scenes, voice),
-        this.imageGenerator.generateImages(scenes, character.profile),
+        this.imageGenerator.generateImages(scenes),
       ]);
 
       // Whisper 타임스탬프 추출

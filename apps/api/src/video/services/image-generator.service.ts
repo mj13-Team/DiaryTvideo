@@ -15,18 +15,13 @@ export class ImageGeneratorService {
 
   constructor(private readonly openaiService: OpenAIService) {}
 
-  async generateImages(
-    scenes: Scene[],
-    characterProfile: string,
-  ): Promise<GeneratedImage[]> {
+  async generateImages(scenes: Scene[]): Promise<GeneratedImage[]> {
     if (!scenes || scenes.length === 0) {
       throw new Error("이미지 생성 실패: 장면 데이터가 없습니다");
     }
 
     const images = await Promise.all(
-      scenes.map((scene) =>
-        this.generateSingleImageWithRetry(scene, characterProfile),
-      ),
+      scenes.map((scene) => this.generateSingleImageWithRetry(scene)),
     );
 
     return images;
@@ -34,13 +29,12 @@ export class ImageGeneratorService {
 
   private async generateSingleImageWithRetry(
     scene: Scene,
-    characterProfile: string,
   ): Promise<GeneratedImage> {
     let lastError: Error | null = null;
 
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
-        return await this.generateSingleImage(scene, characterProfile);
+        return await this.generateSingleImage(scene);
       } catch (error: unknown) {
         lastError = error instanceof Error ? error : new Error(String(error));
 
@@ -64,14 +58,11 @@ export class ImageGeneratorService {
     );
   }
 
-  private async generateSingleImage(
-    scene: Scene,
-    characterProfile: string,
-  ): Promise<GeneratedImage> {
+  private async generateSingleImage(scene: Scene): Promise<GeneratedImage> {
     const client = this.openaiService.getClient();
     const response = await client.images.generate({
       model: "dall-e-3",
-      prompt: `${characterProfile}. Scene: ${scene.visual}. Style: cinematic, warm lighting, soft anime-inspired illustration.`,
+      prompt: `Scene: ${scene.visual}. Style: cinematic, warm lighting, soft anime-inspired illustration.`,
       n: 1,
       size: "1792x1024",
       quality: "standard",

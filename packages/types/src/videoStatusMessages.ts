@@ -4,8 +4,8 @@ const i18nMessage = (msg: Record<Language, string>) => JSON.stringify(msg);
 
 export const VideoStatusMessages = {
   SCENE_ANALYSIS: i18nMessage({
-    en: "Analyzing scenes and creating characters...",
-    ko: "장면 분석 및 캐릭터 생성 중...",
+    en: "Analyzing scenes...",
+    ko: "장면 분석 중...",
   }),
   AUDIO_IMAGE_GENERATION: i18nMessage({
     en: "Generating audio and images...",

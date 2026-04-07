@@ -7,23 +7,10 @@ export interface Scene {
   narration: string;
 }
 
-export interface CharacterProfile {
-  profile: string;
-  inferred_from: string;
-}
-
 export interface SceneSplitResult {
-  character: CharacterProfile;
   voice: "male" | "female";
   scenes: Scene[];
 }
-
-const DEFAULT_PROFILES = [
-  "Young Asian woman in her early 20s, long black hair, casual outfit, soft natural makeup, warm smile",
-  "Young Asian man in his mid-20s, short black hair, wearing a hoodie, relaxed expression",
-  "Young Asian woman in her late 20s, shoulder-length brown hair, minimal makeup, cozy sweater",
-  "Young Asian man in his early 30s, neat short hair, smart casual outfit, friendly demeanor",
-];
 
 @Injectable()
 export class SceneSplitterService {
@@ -39,10 +26,6 @@ export class SceneSplitterService {
 
 Your response MUST be a valid JSON object with this exact structure:
 {
-  "character": {
-    "profile": "detailed character description in English for image generation",
-    "inferred_from": "reasoning for the character profile"
-  },
   "voice": "male" or "female",
   "scenes": [
     {
@@ -52,17 +35,6 @@ Your response MUST be a valid JSON object with this exact structure:
     }
   ]
 }
-
-Character profile rules:
-1. Analyze the diary content to infer the writer's characteristics (gender, age, outfit based on context)
-2. Examples:
-   - "퇴근길" (commute home) → office worker attire, beige trench coat
-   - "운동하다가" (while exercising) → sportswear, athletic outfit
-   - "학교에서" (at school) → student, school uniform or casual
-   - "아이와 놀았다" (played with child) → parent figure, comfortable clothes
-3. If unable to infer, use a neutral profile like "young adult in casual attire"
-4. The profile MUST include: gender, age range, hair style, clothing, and end with "realistic photography style, cinematic lighting"
-5. This profile will be prepended to ALL image generation prompts for consistency
 
 Scene rules:
 - Create 1-6 scenes based on the diary content length and complexity
@@ -94,13 +66,11 @@ Voice selection:
     const userPrompt = `Diary Title: ${title}
 Diary Content: ${content}
 
-Analyze this diary and create:
-1. A character profile based on the diary's context
-2. Split into scenes based on the diary length
-   - Use ONLY the exact content from the diary
-   - DO NOT add any information not explicitly written
-   - If the diary is short, create fewer scenes (even just 1 scene is fine)
-   - Narration must be the original Korean text, not a rewritten version`;
+Analyze this diary and split it into scenes based on the diary length:
+- Use ONLY the exact content from the diary
+- DO NOT add any information not explicitly written
+- If the diary is short, create fewer scenes (even just 1 scene is fine)
+- Narration must be the original Korean text, not a rewritten version`;
 
     try {
       const response = await client.chat.completions.create({
@@ -123,17 +93,6 @@ Analyze this diary and create:
       // 장면 검증
       if (!result.scenes || result.scenes.length === 0) {
         throw new Error("장면 분할 결과가 비어있습니다");
-      }
-
-      // 캐릭터 프로필 검증 및 fallback
-      if (!result.character?.profile) {
-        result.character = {
-          profile:
-            DEFAULT_PROFILES[
-              Math.floor(Math.random() * DEFAULT_PROFILES.length)
-            ],
-          inferred_from: "default profile (could not infer from diary)",
-        };
       }
 
       // voice 기본값
