@@ -36,7 +36,7 @@ export class VideoProcessor extends WorkerHost {
   }
 
   async process(job: Job<VideoJobData>): Promise<void> {
-    const { diaryId, userId, title, content } = job.data;
+    const { diaryId, userId, title, content, customStyle } = job.data;
     this.logger.log(`Processing video generation for diary: ${diaryId}`);
 
     let failedMessage = VideoStatusMessages.FAILED;
@@ -57,6 +57,7 @@ export class VideoProcessor extends WorkerHost {
       const { voice, scenes } = await this.sceneSplitter.splitIntoScenes(
         title,
         content,
+        customStyle,
       );
 
       // TTS + 이미지 생성 (병렬 실행)
@@ -69,7 +70,7 @@ export class VideoProcessor extends WorkerHost {
 
       const [audios, images] = await Promise.all([
         this.ttsService.generateAudio(scenes, voice),
-        this.imageGenerator.generateImages(scenes),
+        this.imageGenerator.generateImages(scenes, customStyle),
       ]);
 
       // Whisper 타임스탬프 추출

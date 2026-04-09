@@ -19,6 +19,7 @@ export class SceneSplitterService {
   async splitIntoScenes(
     title: string,
     content: string,
+    customStyle?: string,
   ): Promise<SceneSplitResult> {
     const client = this.openaiService.getClient();
 
@@ -72,7 +73,11 @@ Analyze this diary and split it into scenes based on the diary length:
 - Use ONLY the exact content from the diary
 - DO NOT add any information not explicitly written
 - If the diary is short, create fewer scenes (even just 1 scene is fine)
-- Narration must be the original Korean text, not a rewritten version`;
+- Narration must be the original Korean text, not a rewritten version${
+      customStyle
+        ? `\n\nUser style request (apply to all visual descriptions, but the NO PEOPLE rule still overrides this): ${customStyle}`
+        : ""
+    }`;
 
     try {
       const response = await client.chat.completions.create({

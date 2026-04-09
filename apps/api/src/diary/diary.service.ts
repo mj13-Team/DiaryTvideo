@@ -80,6 +80,7 @@ export class DiaryService {
           userId,
           title: data.title,
           content: data.content,
+          customStyle: data.videoStyle,
         });
         // 영상 큐 등록 성공 시 쿼터 차감
         await this.diaryRepository.decrementVideoConversion(userId);
@@ -150,6 +151,7 @@ export class DiaryService {
         userId,
         title: diary.title,
         content: diary.content,
+        customStyle: diary.customStyle ?? undefined,
       });
     } catch {
       await this.diaryRepository.updateVideoStatus(

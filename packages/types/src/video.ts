@@ -17,6 +17,7 @@ export const VideoJobDataSchema = z.object({
   userId: z.number(),
   title: z.string(),
   content: z.string(),
+  customStyle: z.string().max(200).optional(),
 });
 
 // 비디오 진행 상태 메시지 (WebSocket용)
